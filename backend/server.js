@@ -212,6 +212,31 @@ app.post('/api/staff/status', async (req, res) => {
   }
 });
 
+app.post('/api/admin/clean-data', async (req, res) => {
+  const { password } = req.body;
+  if (password !== 'Việt Bách đẹp chai vkl') {
+    return res.status(401).json({ success: false, message: 'Sai mật khẩu!' });
+  }
+  try {
+    await Evaluation.deleteMany({});
+    await Candidate.updateMany({}, {
+      $set: { 
+        status: 'active', 
+        assignedTable: null,
+        checkInTime: null,
+        interviewEndTime: null
+      }
+    });
+    await User.updateMany({ role: 'interviewer' }, {
+      $set: { status: 'active' }
+    });
+    io.emit('board_update');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.get('/api/evaluations', async (req, res) => {
   try {
     const evals = await Evaluation.find().sort({ createdAt: -1 }).lean();

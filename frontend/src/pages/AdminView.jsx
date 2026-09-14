@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash } from 'lucide-react';
+import { LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2 } from 'lucide-react';
 import Board from './Board';
 import ChatWidget from '../components/ChatWidget';
 import MacBackground from '../components/MacBackground';
@@ -63,6 +63,25 @@ export default function AdminView() {
 
   const bottleneckCandidates = boardData.waiting.filter(c => getWaitMinutes(c.checkInTime) > 30);
 
+  const handleCleanData = async () => {
+    const password = window.prompt("CẢNH BÁO: Hành động này sẽ làm sạch toàn bộ dữ liệu phỏng vấn để bắt đầu phiên mới. Vui lòng nhập mật khẩu xác nhận:");
+    if (password === null) return;
+    
+    const res = await fetch('/api/admin/clean-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert("✅ Đã làm sạch dữ liệu thành công! Hệ thống sẵn sàng cho buổi phỏng vấn mới.");
+      fetchBoard();
+      if (activeTab === 'evaluations') fetchEvaluations();
+    } else {
+      alert("Lỗi: " + data.message);
+    }
+  };
+
   const exportCSV = () => {
     if (evaluations.length === 0) return;
     
@@ -112,12 +131,20 @@ export default function AdminView() {
 
           <div className="flex items-center gap-3">
             {['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'].includes(user.fullName) && (
-              <button 
-                onClick={() => setShowTablePrompt(true)}
-                className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
-              >
-                <RefreshCw size={16} /> Chuyển sang Người PV
-              </button>
+              <>
+                <button 
+                  onClick={handleCleanData}
+                  className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+                >
+                  <Trash2 size={16} /> Làm sạch dữ liệu
+                </button>
+                <button 
+                  onClick={() => setShowTablePrompt(true)}
+                  className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+                >
+                  <RefreshCw size={16} /> Chuyển sang Người PV
+                </button>
+              </>
             )}
             
             {activeTab === 'evaluations' && (
