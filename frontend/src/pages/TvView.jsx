@@ -31,86 +31,12 @@ export default function TvView() {
     }
   };
 
-  // Handle Voice Announcement
-  useEffect(() => {
-    if (!audioEnabled || boardData.moving.length === 0) return;
-
-    let played = JSON.parse(sessionStorage.getItem('playedAnnouncements') || '[]');
-    let updated = false;
-
-    boardData.moving.forEach(candidate => {
-      const announceId = `${candidate.interviewCode}_${candidate.assignedTable}`;
-      if (!played.includes(announceId)) {
-        played.push(announceId);
-        updated = true;
-        
-        const name = candidate.applicationData?.['Họ và tên'] || '';
-        const mssv = candidate.interviewCode;
-        const table = candidate.assignedTable;
-        
-        const text = `Xin mời ứng viên, ${name}, mã số, ${mssv.split('').join(' ')}, đến bàn phỏng vấn số, ${table}`;
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'vi-VN';
-        utterance.rate = 0.85; // Slightly slower for clarity
-        utterance.pitch = 1;
-        
-        // Play a chime first (optional), then speech
-        const chime = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-        chime.volume = 0.5;
-        chime.play().then(() => {
-          setTimeout(() => {
-            window.speechSynthesis.speak(utterance);
-          }, 1000);
-        }).catch(() => {
-          window.speechSynthesis.speak(utterance);
-        });
-      }
-    });
-
-    if (updated) {
-      sessionStorage.setItem('playedAnnouncements', JSON.stringify(played));
-    }
-  }, [boardData.moving, audioEnabled]);
-
-  const testAudio = () => {
-    if (!audioEnabled) {
-      alert("Vui lòng Bật âm thanh trước khi thử loa!");
-      return;
-    }
-    const utterance = new SpeechSynthesisUtterance("Thử âm thanh thành công.");
-    utterance.lang = 'vi-VN';
-    window.speechSynthesis.speak(utterance);
-  };
-
   // Recent 5 people interviewing
   const recentCalls = [...boardData.interviewing].slice(-5).reverse();
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-900 font-sans flex flex-col items-center">
       <MacBackground />
-
-      {/* Top Bar for TV Controls - Can be hidden on actual fullscreen, but needed for audio setup */}
-      <div className="w-full bg-slate-900/80 backdrop-blur-xl border-b border-white/10 p-4 flex justify-between items-center z-10">
-        <div className="flex items-center gap-3">
-          <Monitor className="text-blue-400" size={28} />
-          <h1 className="text-2xl font-black text-white tracking-wider uppercase">Chế Độ Trình Chiếu</h1>
-        </div>
-        
-        <div className="flex gap-4">
-          <button 
-            onClick={() => setAudioEnabled(!audioEnabled)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all ${audioEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}
-          >
-            {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-            {audioEnabled ? 'Âm thanh: Đang bật' : 'Âm thanh: Đang tắt'}
-          </button>
-          
-          <button onClick={testAudio} className="bg-slate-800 text-white border border-slate-700 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-700 transition-all flex items-center gap-2">
-            <BellRing size={20} /> Thử Loa
-          </button>
-        </div>
-      </div>
 
       <div className="flex-1 w-full max-w-[1920px] mx-auto p-6 md:p-10 flex flex-col lg:flex-row gap-8 z-10">
         {/* Left Panel: Currently Calling */}
