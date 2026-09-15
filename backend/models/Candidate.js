@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 const candidateSchema = new mongoose.Schema({
-  interviewCode: { type: String, required: true, unique: true },
+  interviewCode: { type: String, required: true },
+  department: { type: String, enum: ['TCKT', 'BCS'], default: 'TCKT' },
   status: { 
     type: String, 
     enum: ['active', 'waiting', 'moving', 'interviewing', 'completed'], 

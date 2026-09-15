@@ -8,6 +8,7 @@ export default function Login() {
   const [code, setCode] = useState('');
   const [tableNumber, setTableNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState('');
   const [tempUser, setTempUser] = useState(null);
   const navigate = useNavigate();
 
@@ -24,21 +25,40 @@ export default function Login() {
       const data = await res.json();
       
       if (data.success) {
-        if (data.role === 'candidate') {
-          localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate' }));
+        if (data.requireDepartment) {
+          setTempUser({ code: code.trim(), departments: data.departments });
+          setStep(1.5);
+        } else if (data.role === 'candidate') {
+          localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate', department: data.department }));
           navigate('/candidate');
         } else if (data.role === 'interviewer') {
           setTempUser(data);
           setStep(2); // Ask for Table & Room Number
         } else {
           // Admin / Receptionist
-          localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: data.role }));
+          localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: data.role, department: data.department, roles: data.roles }));
           navigate('/admin');
         }
       } else {
         alert(data.message || "Đăng nhập thất bại!");
       }
     } 
+    // Step 1.5: Select Department for Candidate applying to both
+    else if (step === 1.5) {
+      if (!selectedDepartment) return alert("Vui lòng chọn Ban!");
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: tempUser.code, department: selectedDepartment })
+      });
+      const data = await res.json();
+      if (data.success && data.role === 'candidate') {
+        localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate', department: data.department }));
+        navigate('/candidate');
+      } else {
+        alert(data.message || "Đăng nhập thất bại!");
+      }
+    }
     // Step 2: Set Table & Room Number for Interviewer
     else if (step === 2) {
       if (!tableNumber.trim() || !roomNumber.trim()) {
@@ -57,6 +77,8 @@ export default function Login() {
           username: data.username, 
           fullName: data.fullName,
           role: data.role, 
+          department: data.department,
+          roles: data.roles,
           roomNumber: data.roomNumber,
           tableNumber: data.tableNumber,
           autoAssign: data.autoAssign
@@ -96,6 +118,27 @@ export default function Login() {
                 className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800 placeholder:text-slate-400"
               />
             </div>
+            </div>
+          )}
+
+          {step === 1.5 && (
+            <div className="space-y-4 animate-fade-in">
+              <label className="block text-sm font-bold text-slate-700 ml-1">
+                Bạn đã đăng ký cả 2 Ban. Vui lòng chọn Ban muốn phỏng vấn lúc này: <span className="text-blue-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {tempUser?.departments?.map(dep => (
+                  <button 
+                    type="button" 
+                    key={dep}
+                    onClick={() => setSelectedDepartment(dep)}
+                    className={`py-3 rounded-xl font-bold border-2 transition-all ${selectedDepartment === dep ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'}`}
+                  >
+                    {dep === 'TCKT' ? 'Ban TCKT' : 'Ban Cán sự'}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={() => setStep(1)} className="text-sm font-semibold text-blue-500 hover:text-blue-700 mt-2 block ml-1">&larr; Quay lại</button>
             </div>
           )}
 
@@ -149,7 +192,7 @@ export default function Login() {
           )}
           
           <button type="submit" className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 mt-8 rounded-2xl font-black text-lg shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
-            <LogIn size={20} /> {step === 1 ? 'TIẾP TỤC' : 'XÁC NHẬN VÀO BÀN'}
+            <LogIn size={20} /> {step === 1 ? 'TIẾP TỤC' : step === 1.5 ? 'XÁC NHẬN VÀO PHÒNG CHỜ' : 'XÁC NHẬN VÀO BÀN'}
           </button>
         </form>
 

@@ -135,6 +135,7 @@ export default function InterviewerView() {
     if (!currentCandidate) return;
     const data = {
       interviewCode: currentCandidate.interviewCode,
+      department: currentCandidate.department || user.department,
       interviewerUsername: user.username,
       attitudeScore: attitude,
       skillScore: skill,

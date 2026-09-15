@@ -52,7 +52,7 @@ const assignCandidates = async () => {
         continue; // Skip this interviewer, the table is busy
       }
 
-      const waitingCandidate = await Candidate.findOne({ status: 'waiting' }).sort({ checkInTime: 1 });
+      const waitingCandidate = await Candidate.findOne({ status: 'waiting', department: interviewer.department }).sort({ checkInTime: 1 });
       if (waitingCandidate) {
         waitingCandidate.status = 'moving';
         waitingCandidate.assignedRoom = interviewer.roomNumber;
@@ -83,9 +83,13 @@ io.on('connection', (socket) => {
   // Candidate checks in
   socket.on('candidate_checkin', async (data) => {
     try {
-      let candidate = await Candidate.findOne({ interviewCode: data.interviewCode });
+      if (!data.interviewCode) return;
+      let query = { interviewCode: data.interviewCode };
+      if (data.department) query.department = data.department;
+      
+      let candidate = await Candidate.findOne(query);
       if (!candidate) {
-        candidate = new Candidate({ interviewCode: data.interviewCode });
+        candidate = new Candidate({ interviewCode: data.interviewCode, department: data.department || 'TCKT' });
       }
       if (candidate.status === 'active' || !candidate.status) {
         candidate.status = 'waiting';
@@ -106,7 +110,9 @@ io.on('connection', (socket) => {
   // Interviewer confirms candidate arrived
   socket.on('interviewer_confirm_presence', async (data) => {
     try {
-      const candidate = await Candidate.findOne({ interviewCode: data.interviewCode });
+      let query = { interviewCode: data.interviewCode };
+      if (data.department) query.department = data.department;
+      const candidate = await Candidate.findOne(query);
       if (candidate && candidate.status === 'moving') {
         candidate.status = 'interviewing';
         await candidate.save();
@@ -120,14 +126,25 @@ io.on('connection', (socket) => {
 
 // Unified Login API
 app.post('/api/login', async (req, res) => {
-  let { code, tableNumber, roomNumber } = req.body;
-  if (code) code = code.trim().toUpperCase(); // Normalize for PVxxx and MSSV matching
+  let { code, tableNumber, roomNumber, department } = req.body;
+  if (code) code = code.trim().toUpperCase(); 
   
   try {
     // 1. Check if Candidate
-    let candidate = await Candidate.findOne({ interviewCode: code });
-    if (candidate) {
-      return res.json({ success: true, role: 'candidate', interviewCode: candidate.interviewCode });
+    let candidates = await Candidate.find({ interviewCode: code });
+    if (candidates.length > 0) {
+      if (candidates.length === 1) {
+        return res.json({ success: true, role: 'candidate', interviewCode: candidates[0].interviewCode, department: candidates[0].department });
+      } else {
+        if (!department) {
+          // Ask for department selection if applied to both
+          return res.json({ success: true, requireDepartment: true, departments: candidates.map(c => c.department) });
+        }
+        let selectedCand = candidates.find(c => c.department === department);
+        if (selectedCand) {
+          return res.json({ success: true, role: 'candidate', interviewCode: selectedCand.interviewCode, department: selectedCand.department });
+        }
+      }
     }
 
     // 2. Check if Staff (case-insensitive)
@@ -144,23 +161,27 @@ app.post('/api/login', async (req, res) => {
         role: user.role, 
         username: user.username,
         fullName: user.fullName,
+        department: user.department,
+        roles: user.roles,
         tableNumber: user.tableNumber,
         roomNumber: user.roomNumber,
         autoAssign: user.autoAssign
       });
     }
 
-    return res.status(401).json({ success: false, message: 'Invalid code' });
+    return res.status(401).json({ success: false, message: 'Sai Mã đăng nhập.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
 app.get('/api/board', async (req, res) => {
-  const waiting = await Candidate.find({ status: 'waiting' }).sort({ checkInTime: 1 });
-  const moving = await Candidate.find({ status: 'moving' });
-  const interviewing = await Candidate.find({ status: 'interviewing' });
-  const completed = await Candidate.find({ status: 'completed' });
+  const { department } = req.query;
+  const filter = department ? { department } : {};
+  const waiting = await Candidate.find({ status: 'waiting', ...filter }).sort({ checkInTime: 1 });
+  const moving = await Candidate.find({ status: 'moving', ...filter });
+  const interviewing = await Candidate.find({ status: 'interviewing', ...filter });
+  const completed = await Candidate.find({ status: 'completed', ...filter });
   res.json({ waiting: [...waiting, ...moving], interviewing, completed });
 });
 
@@ -168,6 +189,7 @@ app.get('/api/tv-board', async (req, res) => {
   const fields = {
     interviewCode: 1,
     status: 1,
+    department: 1,
     assignedRoom: 1,
     assignedTable: 1,
     'applicationData.Họ và tên': 1,
@@ -176,21 +198,18 @@ app.get('/api/tv-board', async (req, res) => {
   const waiting = await Candidate.find({ status: 'waiting' }).select(fields).sort({ checkInTime: 1 }).lean();
   const moving = await Candidate.find({ status: 'moving' }).select(fields).lean();
   const interviewing = await Candidate.find({ status: 'interviewing' }).select(fields).lean();
-  
-  // Sort moving candidates by latest first (assuming they moved recently)
-  // For TV, we want 'moving' as recent calls, and top N 'waiting' as up next.
   res.json({ waiting, moving, interviewing });
 });
 
 app.post('/api/evaluation', async (req, res) => {
-  const { interviewCode, interviewerUsername, attitudeScore, skillScore, problemSolvingScore, notes, result } = req.body;
+  const { interviewCode, department, interviewerUsername, attitudeScore, skillScore, problemSolvingScore, notes, result } = req.body;
   try {
     const evaluation = new Evaluation({
-      interviewCode: interviewCode, interviewerUsername, attitudeScore, skillScore, problemSolvingScore, notes, result
+      interviewCode, department, interviewerUsername, attitudeScore, skillScore, problemSolvingScore, notes, result
     });
     await evaluation.save();
 
-    const candidate = await Candidate.findOne({ interviewCode });
+    const candidate = await Candidate.findOne({ interviewCode, department });
     if (candidate) {
       candidate.status = 'completed';
       candidate.interviewEndTime = new Date();
@@ -353,17 +372,18 @@ app.post('/api/interviewer/settings', async (req, res) => {
 app.post('/api/interviewer/cancel', async (req, res) => {
   const { username, interviewCode } = req.body;
   try {
+    const interviewer = await User.findOne({ username });
+    if (!interviewer) return res.status(400).json({ success: false, message: 'Invalid interviewer' });
+
     const candidate = await Candidate.findOne({ 
-      interviewCode, 
+      interviewCode,
+      department: interviewer.department,
       status: { $in: ['moving', 'interviewing'] } 
     });
     if (!candidate) return res.status(400).json({ success: false, message: 'Ứng viên không trong trạng thái đang gọi/phỏng vấn' });
 
-    const interviewer = await User.findOne({ username });
-    if (interviewer) {
-      interviewer.status = 'active';
-      await interviewer.save();
-    }
+    interviewer.status = 'active';
+    await interviewer.save();
 
     // Set checkInTime to 0 so they sort to the very top of the waiting queue
     candidate.status = 'waiting';
@@ -391,8 +411,8 @@ app.post('/api/interviewer/call', async (req, res) => {
     });
     if (busyCandidate) return res.status(400).json({ success: false, message: 'Bàn này đang có người phỏng vấn!' });
 
-    const candidate = await Candidate.findOne({ interviewCode, status: 'waiting' });
-    if (!candidate) return res.status(400).json({ success: false, message: 'Candidate no longer available' });
+    const candidate = await Candidate.findOne({ interviewCode, status: 'waiting', department: interviewer.department });
+    if (!candidate) return res.status(400).json({ success: false, message: 'Candidate no longer available in your department' });
 
     candidate.status = 'moving';
     candidate.assignedRoom = interviewer.roomNumber;
@@ -444,4 +464,20 @@ app.get(/(.*)/, (req, res) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+app.get('/api/users', async (req, res) => {
+  const users = await User.find().lean();
+  res.json(users);
+});
+
+app.post('/api/users/update', async (req, res) => {
+  const { username, roles, department } = req.body;
+  const u = await User.findOne({ username });
+  if (u) {
+    if (roles) u.roles = roles;
+    if (department) u.department = department;
+    await u.save();
+  }
+  res.json({ success: true });
 });

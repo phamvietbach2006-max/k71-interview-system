@@ -10,20 +10,24 @@ export default function AdminView() {
   const navigate = useNavigate();
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [evaluations, setEvaluations] = useState([]);
-  const [activeTab, setActiveTab] = useState('board'); // board, evaluations
+  const [usersList, setUsersList] = useState([]);
+  const [activeTab, setActiveTab] = useState('board'); // board, evaluations, users
   const [showTablePrompt, setShowTablePrompt] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
   const user = JSON.parse(localStorage.getItem('user'));
+  const isSuperAdmin = user.fullName === 'Phạm Việt Bách' || user.username === 'Phạm Việt Bách';
+  const [viewDepartment, setViewDepartment] = useState(user.department || 'TCKT');
 
   useEffect(() => {
     fetchBoard();
     const interval = setInterval(fetchBoard, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [viewDepartment]);
 
   useEffect(() => {
     if (activeTab === 'evaluations') fetchEvaluations();
+    if (activeTab === 'users' && isSuperAdmin) fetchUsers();
   }, [activeTab]);
 
   const switchRole = async (e) => {
@@ -41,14 +45,14 @@ export default function AdminView() {
       stored.role = 'interviewer';
       stored.roomNumber = roomNumber;
       stored.tableNumber = tableNumber;
-      // Auto Assign remains true by default
       localStorage.setItem('user', JSON.stringify(stored));
       navigate('/interviewer');
     }
   };
 
   const fetchBoard = async () => {
-    const res = await fetch('/api/board');
+    const query = viewDepartment ? `?department=${viewDepartment}` : '';
+    const res = await fetch(`/api/board${query}`);
     const data = await res.json();
     setBoardData(data);
   };
@@ -59,6 +63,28 @@ export default function AdminView() {
     setEvaluations(data);
   };
 
+  const fetchUsers = async () => {
+    const res = await fetch('/api/users');
+    const data = await res.json();
+    setUsersList(data);
+  };
+
+  const updateUserRole = async (username, currentRoles, roleToToggle) => {
+    let newRoles = [...(currentRoles || [])];
+    if (newRoles.includes(roleToToggle)) {
+      newRoles = newRoles.filter(r => r !== roleToToggle);
+    } else {
+      newRoles.push(roleToToggle);
+    }
+    
+    await fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, roles: newRoles })
+    });
+    fetchUsers();
+  };
+
   const getWaitMinutes = (checkInTime) => {
     if (!checkInTime || new Date(checkInTime).getTime() === 0) return 0;
     return Math.floor((new Date() - new Date(checkInTime)) / 60000);
@@ -67,8 +93,12 @@ export default function AdminView() {
   const bottleneckCandidates = boardData.waiting.filter(c => getWaitMinutes(c.checkInTime) > 30);
 
   const handleCleanData = async () => {
-    const password = window.prompt("CẢNH BÁO: Hành động này sẽ làm sạch toàn bộ dữ liệu phỏng vấn để bắt đầu phiên mới. Vui lòng nhập mật khẩu xác nhận:");
+    const password = window.prompt("CẢNH BÁO: Hành động này sẽ làm sạch toàn bộ dữ liệu phỏng vấn. Vui lòng nhập mật khẩu:");
     if (password === null) return;
+    if (password !== "Việt Bách đẹp chai vkl") {
+      alert("Sai mật khẩu xác nhận!");
+      return;
+    }
     
     const res = await fetch('/api/admin/clean-data', {
       method: 'POST',
@@ -77,7 +107,7 @@ export default function AdminView() {
     });
     const data = await res.json();
     if (data.success) {
-      alert("✅ Đã làm sạch dữ liệu thành công! Hệ thống sẵn sàng cho buổi phỏng vấn mới.");
+      alert("✅ Đã làm sạch dữ liệu thành công!");
       fetchBoard();
       if (activeTab === 'evaluations') fetchEvaluations();
     } else {
@@ -89,7 +119,7 @@ export default function AdminView() {
     const code = window.prompt("Nhập MSSV (hoặc Mã PV) của ứng viên để Check-in hộ:");
     if (!code) return;
     
-    socketRef.current.emit('candidate_checkin', { interviewCode: code.trim().toUpperCase() });
+    socketRef.current.emit('candidate_checkin', { interviewCode: code.trim().toUpperCase(), department: viewDepartment });
     alert(`Đã gửi yêu cầu check-in cho ${code.trim().toUpperCase()}`);
   };
 
@@ -108,7 +138,7 @@ export default function AdminView() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "DuLieu_PhongVan.csv");
+    link.setAttribute("download", `Danh_gia_phong_van_${viewDepartment}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -123,7 +153,7 @@ export default function AdminView() {
       <MacWindow title={`Dashboard Điều Khiển (Admin & Lễ Tân) - ${user.fullName || user.username}`} className="w-full max-w-[1600px] flex-1" contentClassName="p-0 flex flex-col h-full">
         {/* Navigation Tabs */}
         <div className="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-md shrink-0">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <nav className="flex gap-2 bg-slate-900/50 p-1 rounded-xl">
               <button 
                 onClick={() => setActiveTab('board')}
@@ -137,7 +167,26 @@ export default function AdminView() {
               >
                 <FileText size={18} /> Dữ Liệu Đánh Giá
               </button>
+              {isSuperAdmin && (
+                <button 
+                  onClick={() => setActiveTab('users')}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                >
+                  <ShieldCheck size={18} /> Quản Lý Nhân Sự
+                </button>
+              )}
             </nav>
+
+            {isSuperAdmin && (
+              <select 
+                value={viewDepartment}
+                onChange={e => setViewDepartment(e.target.value)}
+                className="bg-slate-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="TCKT">Ban TCKT</option>
+                <option value="BCS">Ban Cán sự</option>
+              </select>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -294,6 +343,57 @@ export default function AdminView() {
                         </tr>
                       );
                     })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'users' && isSuperAdmin && (
+            <div className="bg-white/80 backdrop-blur-md rounded-[2rem] shadow-xl border border-white/50 p-8 animate-fade-in-up">
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-8 border-b border-slate-100 pb-6">Quản Lý Nhân Sự</h2>
+              <div className="overflow-x-auto custom-scrollbar pb-4">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/80 text-slate-700 border-b-2 border-slate-200">
+                      <th className="p-4 font-black tracking-wider uppercase text-sm">Tài Khoản</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm">Họ và Tên</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm">Ban</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm">Phân Quyền</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usersList.map(u => (
+                      <tr key={u.username} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
+                        <td className="p-4 font-bold text-slate-800">{u.username}</td>
+                        <td className="p-4 text-slate-600 font-medium">{u.fullName || ''}</td>
+                        <td className="p-4">
+                          <select 
+                            value={u.department || 'TCKT'}
+                            onChange={(e) => fetch('/api/users/update', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username: u.username, department: e.target.value }) }).then(fetchUsers)}
+                            className="bg-slate-100 border border-slate-200 text-slate-700 rounded-lg px-3 py-1 text-sm font-bold focus:outline-none focus:border-blue-500"
+                          >
+                            <option value="TCKT">TCKT</option>
+                            <option value="BCS">BCS</option>
+                          </select>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex gap-4">
+                            {['admin', 'interviewer', 'receptionist'].map(role => (
+                              <label key={role} className="flex items-center gap-2 cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={u.roles?.includes(role)} 
+                                  onChange={() => updateUserRole(u.username, u.roles, role)}
+                                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-bold text-slate-600 uppercase tracking-wider">{role}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

@@ -31,100 +31,98 @@ export default function TvView() {
   };
 
   // Recent 5 people interviewing
-  const recentCalls = [...boardData.interviewing].slice(-5).reverse();
+  const tcktMoving = boardData.moving.filter(c => c.department === 'TCKT');
+  const tcktWaiting = boardData.waiting.filter(c => c.department === 'TCKT').slice(0, 5); // Only show top 5 to save space
+  const bcsMoving = boardData.moving.filter(c => c.department === 'BCS');
+  const bcsWaiting = boardData.waiting.filter(c => c.department === 'BCS').slice(0, 5);
+
+  const renderCandidateRow = (c, colorTheme) => (
+    <div key={c.interviewCode} className={`w-full bg-white/10 border border-white/20 p-5 rounded-[1.5rem] flex flex-col xl:flex-row items-center justify-between gap-4 transform hover:scale-[1.02] transition-transform animate-fade-in-up`}>
+      <div className="flex-1 text-center xl:text-left">
+        <div className={`${colorTheme.textMuted} font-bold text-lg uppercase tracking-widest mb-1`}>MSSV: {c.interviewCode}</div>
+        <div className="text-3xl xl:text-4xl font-black text-white tracking-tight drop-shadow-md">
+          {c.applicationData?.['Họ và tên'] || 'Ứng viên'}
+        </div>
+      </div>
+      
+      <div className={`${colorTheme.bgSolid} rounded-[1.5rem] p-5 text-center min-w-[180px] shadow-xl border border-white/20 flex flex-col justify-center`}>
+        {c.assignedRoom && <div className={`${colorTheme.textMuted} font-bold text-sm uppercase tracking-widest mb-1 bg-black/20 rounded-lg py-1`}>PHÒNG {c.assignedRoom}</div>}
+        <div className="text-white/80 font-black text-lg uppercase tracking-widest mb-1">BÀN SỐ</div>
+        <div className="text-6xl font-black text-white leading-none">{c.assignedTable}</div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-900 font-sans flex flex-col items-center">
       <MacBackground />
 
-      <div className="flex-1 w-full max-w-[1920px] mx-auto p-6 md:p-10 flex flex-col lg:flex-row gap-8 z-10">
-        {/* Left Panel: Currently Calling */}
-        <div className="lg:w-2/3 flex flex-col gap-8">
-          <div className="bg-gradient-to-br from-blue-900/80 to-indigo-900/80 backdrop-blur-2xl rounded-[3rem] border border-blue-400/30 shadow-[0_0_50px_rgba(37,99,235,0.2)] p-10 flex-1 flex flex-col">
-            <h2 className="text-3xl md:text-5xl font-black text-blue-200 mb-10 text-center uppercase tracking-widest border-b border-blue-500/30 pb-6">Đang Gọi Vào Bàn</h2>
-            
-            <div className="flex-1 flex flex-col justify-center items-center gap-6">
-              {boardData.moving.length === 0 ? (
-                <div className="text-center text-blue-300/50">
-                  <Monitor size={120} className="mx-auto mb-8 opacity-20" />
-                  <p className="text-3xl font-medium">Hiện chưa gọi thêm ai</p>
-                </div>
-              ) : (
-                boardData.moving.map(c => (
-                  <div key={c.interviewCode} className="w-full bg-white/10 border border-white/20 p-8 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-8 transform hover:scale-[1.02] transition-transform animate-fade-in-up">
-                    <div className="flex-1 text-center md:text-left">
-                      <div className="text-blue-300 font-bold text-2xl uppercase tracking-widest mb-2">MSSV: {c.interviewCode}</div>
-                      <div className="text-5xl md:text-7xl font-black text-white tracking-tight drop-shadow-lg">
-                        {c.applicationData?.['Họ và tên'] || 'Ứng viên'}
-                      </div>
-                    </div>
-                    
-                    <div className="bg-blue-600 rounded-[2rem] p-8 text-center min-w-[250px] shadow-2xl border border-blue-400/50 flex flex-col justify-center">
-                      {c.assignedRoom && <div className="text-blue-100 font-bold text-xl uppercase tracking-widest mb-2 bg-blue-700/50 rounded-lg py-1">PHÒNG {c.assignedRoom}</div>}
-                      <div className="text-blue-200 font-black text-xl uppercase tracking-widest mb-1">BÀN SỐ</div>
-                      <div className="text-7xl md:text-9xl font-black text-white leading-none">{c.assignedTable}</div>
-                    </div>
+      <div className="w-full flex justify-center py-6 z-20 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
+        <div className="flex items-center gap-6 bg-white p-4 rounded-3xl shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+          <div className="text-center pr-6 border-r border-slate-200">
+            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-widest">Quét mã QR</h1>
+            <p className="text-slate-500 font-bold">để xem thứ tự của bạn</p>
+          </div>
+          <img src="/assets/qr.jpeg" alt="QR Code" className="w-32 h-32 rounded-xl object-contain border-4 border-slate-100" />
+        </div>
+      </div>
+
+      <div className="flex-1 w-full mx-auto p-6 md:p-8 flex flex-col lg:flex-row gap-8 z-10 h-[calc(100vh-200px)]">
+        
+        {/* Left Half: TCKT */}
+        <div className="lg:w-1/2 flex flex-col gap-6 bg-gradient-to-br from-blue-900/80 to-indigo-900/80 backdrop-blur-2xl rounded-[3rem] border border-blue-400/30 shadow-[0_0_50px_rgba(37,99,235,0.2)] p-8">
+          <h2 className="text-3xl font-black text-blue-200 text-center uppercase tracking-widest border-b border-blue-500/30 pb-4">BAN TỔ CHỨC - KIỂM TRA</h2>
+          
+          {/* Moving */}
+          <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2 min-h-[30vh]">
+            <h3 className="text-xl font-bold text-blue-300 uppercase tracking-widest">Đang Gọi:</h3>
+            {tcktMoving.length === 0 ? (
+              <p className="text-blue-300/50 italic text-center py-4">Chưa gọi thêm</p>
+            ) : tcktMoving.map(c => renderCandidateRow(c, { bgSolid: 'bg-blue-600', textMuted: 'text-blue-200' }))}
+          </div>
+
+          {/* Waiting */}
+          <div className="bg-slate-900/40 rounded-3xl p-6">
+            <h3 className="text-lg font-bold text-slate-300 uppercase tracking-widest mb-4">Sắp Đến Lượt ({boardData.waiting.filter(c=>c.department==='TCKT').length})</h3>
+            {tcktWaiting.length === 0 ? <p className="text-slate-500 italic">Trống</p> : (
+              <div className="flex flex-wrap gap-3">
+                {tcktWaiting.map(c => (
+                  <div key={c.interviewCode} className="bg-blue-500/20 text-blue-100 px-4 py-2 rounded-xl border border-blue-400/30 font-bold">
+                    {c.interviewCode}
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right Panel: Up Next & Recent */}
-        <div className="lg:w-1/3 flex flex-col gap-6">
-          {/* Waiting List */}
-          <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-white/10 p-8 flex-1 flex flex-col">
-            <h2 className="text-2xl font-black text-slate-300 uppercase tracking-widest mb-6 border-b border-white/10 pb-4">Sắp Đến Lượt</h2>
-            <div className="flex-1 overflow-hidden">
-              {boardData.waiting.length === 0 ? (
-                <p className="text-slate-500 italic text-xl text-center py-10">Hàng đợi trống</p>
-              ) : (
-                <div className="space-y-4">
-                  {boardData.waiting.slice(0, 7).map((c, idx) => (
-                    <div key={c.interviewCode} className="bg-white/5 border border-white/5 p-5 rounded-2xl flex items-center gap-5">
-                      <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-slate-300 font-black text-xl border border-white/10">
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <div className="text-slate-200 font-black text-2xl mb-1">{c.interviewCode}</div>
-                        <div className="text-slate-400 font-medium text-lg">{c.applicationData?.['Họ và tên'] || ''}</div>
-                      </div>
-                    </div>
-                  ))}
-                  {boardData.waiting.length > 7 && (
-                    <div className="text-center text-slate-500 font-bold pt-2">+ {boardData.waiting.length - 7} ứng viên khác</div>
-                  )}
-                </div>
-              )}
-            </div>
+        {/* Right Half: BCS */}
+        <div className="lg:w-1/2 flex flex-col gap-6 bg-gradient-to-br from-emerald-900/80 to-teal-900/80 backdrop-blur-2xl rounded-[3rem] border border-emerald-400/30 shadow-[0_0_50px_rgba(16,185,129,0.2)] p-8">
+          <h2 className="text-3xl font-black text-emerald-200 text-center uppercase tracking-widest border-b border-emerald-500/30 pb-4">BAN CÁN SỰ NĂM NHẤT</h2>
+          
+          {/* Moving */}
+          <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2 min-h-[30vh]">
+            <h3 className="text-xl font-bold text-emerald-300 uppercase tracking-widest">Đang Gọi:</h3>
+            {bcsMoving.length === 0 ? (
+              <p className="text-emerald-300/50 italic text-center py-4">Chưa gọi thêm</p>
+            ) : bcsMoving.map(c => renderCandidateRow(c, { bgSolid: 'bg-emerald-600', textMuted: 'text-emerald-200' }))}
           </div>
 
-          {/* QR Code */}
-          <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-white/10 p-6 flex flex-col items-center justify-center shadow-lg">
-            <h2 className="text-xl font-bold text-slate-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2 w-full text-center">Quét Mã QR Để Đăng Nhập</h2>
-            <img src="/assets/qr.jpeg" alt="QR Code" className="w-48 h-48 rounded-xl object-cover shadow-lg border-4 border-white/20" />
-          </div>
-
-          {/* Recently Called */}
-          <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-white/10 p-8 h-1/3 min-h-[300px] flex flex-col">
-            <h2 className="text-xl font-bold text-slate-400 uppercase tracking-wider mb-6 border-b border-white/10 pb-4">Vừa Thông Báo</h2>
-            <div className="flex-1 overflow-hidden space-y-3">
-              {recentCalls.length === 0 ? (
-                <p className="text-slate-600 italic text-center py-5">Chưa có thông báo gần đây</p>
-              ) : (
-                recentCalls.map(c => (
-                  <div key={c.interviewCode} className="flex justify-between items-center text-slate-400 border-b border-white/5 pb-2 last:border-0">
-                    <span className="font-bold">{c.interviewCode}</span>
-                    <span className="bg-blue-900/50 text-blue-300 px-3 py-1 rounded-lg text-sm font-bold border border-blue-700/50">
-                      {c.assignedRoom ? `P.${c.assignedRoom} - ` : ''}Bàn {c.assignedTable}
-                    </span>
+          {/* Waiting */}
+          <div className="bg-slate-900/40 rounded-3xl p-6">
+            <h3 className="text-lg font-bold text-slate-300 uppercase tracking-widest mb-4">Sắp Đến Lượt ({boardData.waiting.filter(c=>c.department==='BCS').length})</h3>
+            {bcsWaiting.length === 0 ? <p className="text-slate-500 italic">Trống</p> : (
+              <div className="flex flex-wrap gap-3">
+                {bcsWaiting.map(c => (
+                  <div key={c.interviewCode} className="bg-emerald-500/20 text-emerald-100 px-4 py-2 rounded-xl border border-emerald-400/30 font-bold">
+                    {c.interviewCode}
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+
       </div>
     </div>
   );
