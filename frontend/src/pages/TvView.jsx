@@ -37,7 +37,7 @@ export default function TvView() {
 
   const renderCandidateRow = (c, colorTheme) => (
     <div key={c.interviewCode} className={`w-full bg-white/10 border border-white/20 p-3 rounded-2xl flex flex-col xl:flex-row items-center justify-between gap-3 transform hover:scale-[1.02] transition-transform animate-fade-in-up shrink-0`}>
-      <div className="flex-1 text-center xl:text-left">
+      <div className="flex-1 text-left pl-2">
         <div className={`${colorTheme.textMuted} font-bold text-sm uppercase tracking-widest mb-0.5`}>MSSV: {c.interviewCode}</div>
         <div className="text-2xl xl:text-3xl font-black text-white tracking-tight drop-shadow-md leading-tight">
           {c.applicationData?.["Họ và tên"] || "Ứng viên"}
@@ -72,12 +72,12 @@ export default function TvView() {
         <div className="lg:w-1/2 flex flex-col bg-gradient-to-br from-blue-900/80 to-indigo-900/80 backdrop-blur-2xl rounded-[3rem] border border-blue-400/30 shadow-[0_0_50px_rgba(37,99,235,0.2)] p-6 overflow-hidden">
           
           {/* 1. Logo (25%) */}
-          <div className="h-[25%] flex justify-center items-center shrink-0 mb-2">
+          <div className="h-[25%] flex justify-center items-center shrink-0 mb-1">
             <img src="/assets/title_k71.png" alt="TCKT" className="w-full max-w-[85%] h-full object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
           </div>
           
           {/* 2. Moving (25%) */}
-          <div className="h-[25%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-blue-500/30 pt-3 shrink-0">
+          <div className="h-[25%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-blue-500/30 pt-2 shrink-0">
             <h3 className="text-lg font-bold text-blue-300 uppercase tracking-widest shrink-0">Đang Gọi:</h3>
             {tcktMoving.length === 0 ? (
               <p className="text-blue-300/50 italic text-center py-2">Chưa gọi thêm</p>
@@ -85,7 +85,7 @@ export default function TvView() {
           </div>
 
           {/* 3. Waiting (50%) */}
-          <div className="h-[50%] bg-slate-900/40 rounded-3xl p-5 flex flex-col overflow-hidden mt-3">
+          <div className="h-[50%] bg-slate-900/40 rounded-3xl p-4 flex flex-col overflow-hidden mt-2">
             <h3 className="text-base font-bold text-slate-300 uppercase tracking-widest mb-3 shrink-0">Sắp Đến Lượt ({boardData.waiting.filter(c=>c.department==="TCKT").length})</h3>
             {tcktWaiting.length === 0 ? <p className="text-slate-500 italic">Trống</p> : (
               <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar flex-1 pr-2">
@@ -109,12 +109,12 @@ export default function TvView() {
         <div className="lg:w-1/2 flex flex-col bg-gradient-to-br from-emerald-900/80 to-teal-900/80 backdrop-blur-2xl rounded-[3rem] border border-emerald-400/30 shadow-[0_0_50px_rgba(16,185,129,0.2)] p-6 overflow-hidden">
           
           {/* 1. Logo (25%) */}
-          <div className="h-[25%] flex justify-center items-center shrink-0 mb-2">
+          <div className="h-[25%] flex justify-center items-center shrink-0 mb-1">
             <img src="/assets/title_bcs.png" alt="BCS" className="w-full max-w-[85%] h-full object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
           </div>
           
           {/* 2. Moving (25%) */}
-          <div className="h-[25%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-emerald-500/30 pt-3 shrink-0">
+          <div className="h-[25%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-emerald-500/30 pt-2 shrink-0">
             <h3 className="text-lg font-bold text-emerald-300 uppercase tracking-widest shrink-0">Đang Gọi:</h3>
             {bcsMoving.length === 0 ? (
               <p className="text-emerald-300/50 italic text-center py-2">Chưa gọi thêm</p>
@@ -122,7 +122,7 @@ export default function TvView() {
           </div>
 
           {/* 3. Waiting (50%) */}
-          <div className="h-[50%] bg-slate-900/40 rounded-3xl p-5 flex flex-col overflow-hidden mt-3">
+          <div className="h-[50%] bg-slate-900/40 rounded-3xl p-4 flex flex-col overflow-hidden mt-2">
             <h3 className="text-base font-bold text-slate-300 uppercase tracking-widest mb-3 shrink-0">Sắp Đến Lượt ({boardData.waiting.filter(c=>c.department==="BCS").length})</h3>
             {bcsWaiting.length === 0 ? <p className="text-slate-500 italic">Trống</p> : (
               <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar flex-1 pr-2">
