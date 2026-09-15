@@ -73,7 +73,7 @@ export default function TvView() {
           
           {/* 1. Logo (25%) */}
           <div className="h-[15%] flex justify-center items-center shrink-0 mb-0">
-            <img src="/assets/title_k71.png" alt="TCKT" className="w-full max-w-[95%] h-[120%] object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] scale-110" />
+            <img src="/assets/title_k71.png" alt="TCKT" className="w-full h-full object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] scale-[3] pointer-events-none origin-center" />
           </div>
           
           {/* 2. Moving (25%) */}
@@ -110,7 +110,7 @@ export default function TvView() {
           
           {/* 1. Logo (25%) */}
           <div className="h-[15%] flex justify-center items-center shrink-0 mb-0">
-            <img src="/assets/title_bcs.png" alt="BCS" className="w-full max-w-[95%] h-[120%] object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] scale-110" />
+            <img src="/assets/title_bcs.png" alt="BCS" className="w-full h-full object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] scale-[3] pointer-events-none origin-center" />
           </div>
           
           {/* 2. Moving (25%) */}
