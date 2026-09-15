@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
+﻿const fs = require("fs");
+const newCode = `import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import { Volume2, VolumeX, Monitor, BellRing } from "lucide-react";
 import MacBackground from "../components/MacBackground";
@@ -36,16 +37,16 @@ export default function TvView() {
   const bcsWaiting = boardData.waiting.filter(c => c.department === "BCS").slice(0, 5);
 
   const renderCandidateRow = (c, colorTheme) => (
-    <div key={c.interviewCode} className={`w-full bg-white/10 border border-white/20 p-5 rounded-[1.5rem] flex flex-col xl:flex-row items-center justify-between gap-4 transform hover:scale-[1.02] transition-transform animate-fade-in-up`}>
+    <div key={c.interviewCode} className={\`w-full bg-white/10 border border-white/20 p-5 rounded-[1.5rem] flex flex-col xl:flex-row items-center justify-between gap-4 transform hover:scale-[1.02] transition-transform animate-fade-in-up\`}>
       <div className="flex-1 text-center xl:text-left">
-        <div className={`${colorTheme.textMuted} font-bold text-lg uppercase tracking-widest mb-1`}>MSSV: {c.interviewCode}</div>
+        <div className={\`\${colorTheme.textMuted} font-bold text-lg uppercase tracking-widest mb-1\`}>MSSV: {c.interviewCode}</div>
         <div className="text-3xl xl:text-4xl font-black text-white tracking-tight drop-shadow-md">
           {c.applicationData?.["Họ và tên"] || "Ứng viên"}
         </div>
       </div>
       
-      <div className={`${colorTheme.bgSolid} rounded-[1.5rem] p-5 text-center min-w-[180px] shadow-xl border border-white/20 flex flex-col justify-center`}>
-        {c.assignedRoom && <div className={`${colorTheme.textMuted} font-bold text-sm uppercase tracking-widest mb-1 bg-black/20 rounded-lg py-1`}>PHÒNG {c.assignedRoom}</div>}
+      <div className={\`\${colorTheme.bgSolid} rounded-[1.5rem] p-5 text-center min-w-[180px] shadow-xl border border-white/20 flex flex-col justify-center\`}>
+        {c.assignedRoom && <div className={\`\${colorTheme.textMuted} font-bold text-sm uppercase tracking-widest mb-1 bg-black/20 rounded-lg py-1\`}>PHÒNG {c.assignedRoom}</div>}
         <div className="text-white/80 font-black text-lg uppercase tracking-widest mb-1">BÀN SỐ</div>
         <div className="text-6xl font-black text-white leading-none">{c.assignedTable}</div>
       </div>
@@ -142,3 +143,7 @@ export default function TvView() {
     </div>
   );
 }
+\`;
+
+fs.writeFileSync("frontend/src/pages/TvView.jsx", newCode, "utf8");
+console.log("TvView replaced completely");

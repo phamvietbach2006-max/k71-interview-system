@@ -9,6 +9,7 @@ export default function CandidateView() {
   const [status, setStatus] = useState('active'); // active, waiting, moving, interviewing, completed
   const [assignedTable, setAssignedTable] = useState(null);
   const [assignedRoom, setAssignedRoom] = useState(null);
+  const alertIntervalRef = useRef(null);
   const [queuePosition, setQueuePosition] = useState(null);
   const [flash, setFlash] = useState(false);
   const socketRef = useRef(null);
