@@ -101,7 +101,8 @@ export default function Login() {
           roles: data.roles,
           roomNumber: data.roomNumber,
           tableNumber: data.tableNumber,
-          autoAssign: data.autoAssign
+          autoAssign: data.autoAssign,
+          token: data.token
         }));
         navigate('/interviewer');
       } else {
