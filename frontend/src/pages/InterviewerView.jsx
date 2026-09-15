@@ -271,8 +271,8 @@ export default function InterviewerView() {
 
                   {currentCandidate.status === 'interviewing' && (
                     <div className="flex flex-col xl:flex-row gap-8">
-                      {/* Left 1/3: Candidate Data */}
-                      <div className="xl:w-1/3 bg-blue-50/50 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-sm h-[60vh] overflow-y-auto custom-scrollbar">
+                      {/* Left 1/2: Candidate Data */}
+                      <div className="xl:w-1/2 bg-blue-50/50 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-sm h-[70vh] overflow-y-auto custom-scrollbar">
                         <h3 className="font-bold text-blue-900 mb-4 border-b border-blue-200/50 pb-3 text-xl tracking-tight">Thông tin Ứng viên</h3>
                         <div className="space-y-3">
                           {currentCandidate.applicationData && Object.keys(currentCandidate.applicationData).length > 0 ? (
@@ -291,55 +291,55 @@ export default function InterviewerView() {
                         </div>
                       </div>
 
-                      {/* Right 2/3: Evaluation Form */}
-                      <div className="xl:w-2/3 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Right 1/2: Evaluation Form */}
+                      <div className="xl:w-1/2 space-y-5 flex flex-col justify-between h-[70vh]">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { label: 'Thái độ & Tác phong', val: attitude, set: setAttitude },
                             { label: 'Kỹ năng chuyên môn', val: skill, set: setSkill },
                             { label: 'Xử lý tình huống', val: problemSolving, set: setProblemSolving },
                           ].map((item, idx) => (
-                            <div key={idx} className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 shadow-sm">
-                              <label className="block mb-4 font-bold text-slate-700 text-center">{item.label}</label>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-bold text-slate-400">1</span>
+                            <div key={idx} className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                              <label className="block mb-2 font-bold text-slate-700 text-center text-sm">{item.label}</label>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-slate-400">1</span>
                                 <input 
                                   type="range" min="1" max="10" 
                                   value={item.val} onChange={e=>item.set(e.target.value)} 
-                                  className="w-full mx-4 accent-blue-600 cursor-pointer" 
+                                  className="w-full mx-2 accent-blue-600 cursor-pointer" 
                                 />
-                                <span className="text-sm font-bold text-slate-400">10</span>
+                                <span className="text-xs font-bold text-slate-400">10</span>
                               </div>
-                              <div className="text-center mt-4 text-3xl font-black text-blue-600 drop-shadow-sm">{item.val}</div>
+                              <div className="text-center text-3xl font-black text-blue-600 drop-shadow-sm leading-none">{item.val}</div>
                             </div>
                           ))}
                         </div>
 
-                        <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 shadow-sm">
-                          <label className="flex items-center gap-2 mb-3 font-bold text-slate-700">
+                        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex-1 flex flex-col">
+                          <label className="flex items-center gap-2 mb-2 font-bold text-slate-700">
                             <MessageSquare size={18} /> Nhận xét chi tiết
                           </label>
                           <textarea 
                             value={notes} onChange={e=>setNotes(e.target.value)} 
-                            rows="3" placeholder="Ghi chú thêm về ứng viên..."
-                            className="w-full border border-slate-200 rounded-xl p-4 bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none transition-all font-medium text-slate-700"
+                            placeholder="Ghi chú thêm về ứng viên..."
+                            className="w-full flex-1 border border-slate-200 rounded-xl p-3 bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none transition-all font-medium text-slate-700"
                           ></textarea>
                         </div>
 
-                        <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
-                          <label className="font-bold text-slate-700 text-lg">Tổng điểm trung bình:</label>
-                          <span className="text-3xl font-black text-indigo-600 bg-indigo-50 px-6 py-2 rounded-xl border border-indigo-100 shadow-inner">
+                        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+                          <label className="font-bold text-slate-700 text-base">Tổng điểm trung bình:</label>
+                          <span className="text-2xl font-black text-indigo-600 bg-indigo-50 px-5 py-1.5 rounded-xl border border-indigo-100 shadow-inner">
                             {((Number(attitude) + Number(skill) + Number(problemSolving)) / 3).toFixed(1)}
                           </span>
                         </div>
 
-                        <div className="bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 shadow-sm">
-                          <label className="block mb-4 font-bold text-slate-700 text-lg">Quyết định cuối cùng</label>
-                          <div className="flex flex-col md:flex-row gap-4">
+                        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm">
+                          <label className="block mb-3 font-bold text-slate-700 text-base">Quyết định cuối cùng</label>
+                          <div className="flex flex-col sm:flex-row gap-3">
                             {['Đạt', 'Không đạt', 'Cân nhắc thêm'].map(r => (
                               <button 
                                 key={r} onClick={() => setResult(r)}
-                                className={`flex-1 py-4 rounded-xl font-bold text-lg border-2 transition-all shadow-sm ${result === r ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50/30'}`}
+                                className={`flex-1 py-3 rounded-xl font-bold text-sm md:text-base border-2 transition-all shadow-sm ${result === r ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300 hover:bg-blue-50/30'}`}
                               >
                                 {r}
                               </button>
@@ -347,12 +347,12 @@ export default function InterviewerView() {
                           </div>
                         </div>
 
-                        <div className="pt-6 flex justify-end gap-4">
-                          <button onClick={cancelInterview} className="text-red-500 hover:text-red-700 font-bold px-6 py-4 rounded-xl border-2 border-transparent hover:border-red-200 hover:bg-red-50 transition-all flex items-center gap-2">
-                            <XCircle size={20} /> Hủy lượt & Đưa về hàng chờ
+                        <div className="flex justify-end gap-3 mt-2">
+                          <button onClick={cancelInterview} className="text-red-500 hover:text-red-700 font-bold px-4 py-3 rounded-xl border-2 border-transparent hover:border-red-200 hover:bg-red-50 transition-all flex items-center gap-2 text-sm md:text-base">
+                            <XCircle size={18} /> Hủy & Đưa về hàng chờ
                           </button>
-                          <button onClick={submitEvaluation} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-10 py-4 rounded-xl font-black text-lg shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center gap-2">
-                            <Save size={20} strokeWidth={2.5} /> HOÀN TẤT & LƯU
+                          <button onClick={submitEvaluation} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-black shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center gap-2 text-sm md:text-base">
+                            <Save size={18} /> HOÀN TẤT & LƯU
                           </button>
                         </div>
                       </div>
