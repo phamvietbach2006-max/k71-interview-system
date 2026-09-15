@@ -31,6 +31,16 @@ async function importExcel() {
         if (!candidate) {
           candidate = new Candidate({ interviewCode: pvCode, status: 'active' });
         }
+        
+        for (let k of Object.keys(row)) {
+          if (k.toLowerCase().includes('điện thoại')) {
+            let v = String(row[k]).trim();
+            if (v && v.length >= 8 && !v.startsWith('0')) {
+              row[k] = '0' + v;
+            }
+          }
+        }
+
         candidate.applicationData = row;
         await candidate.save();
         count++;

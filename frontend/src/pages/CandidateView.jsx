@@ -12,6 +12,7 @@ export default function CandidateView() {
   const alertIntervalRef = useRef(null);
   const [queuePosition, setQueuePosition] = useState(null);
   const [flash, setFlash] = useState(false);
+  const [hasAcked, setHasAcked] = useState(false);
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function CandidateView() {
     socketRef.current.on('candidate_assigned', (data) => {
       if (data.candidate.interviewCode === stored.interviewCode) {
         setStatus('moving');
+        setHasAcked(false);
         setAssignedTable(data.tableNumber);
         setAssignedRoom(data.roomNumber);
         playAlertSound();
@@ -92,6 +94,7 @@ export default function CandidateView() {
   const handleAckMoving = () => {
     socketRef.current.emit('candidate_moving_ack', { interviewCode: user.interviewCode });
     setFlash(false);
+    setHasAcked(true);
   };
 
   if (!user) return <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans">Vui lòng đăng nhập...</div>;
@@ -145,9 +148,11 @@ export default function CandidateView() {
                 <span className="block text-lg text-blue-600 font-black mb-1 tracking-widest">BÀN SỐ</span>
                 <span className="block text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-blue-600 to-indigo-700 drop-shadow-sm">{assignedTable}</span>
               </div>
-              <button onClick={handleAckMoving} className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-4 rounded-xl text-lg font-black w-full shadow-lg hover:shadow-green-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
-                TÔI ĐÃ NHẬN THÔNG TIN
-              </button>
+              {!hasAcked && (
+                <button onClick={handleAckMoving} className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-4 rounded-xl text-lg font-black w-full shadow-lg hover:shadow-green-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
+                  TÔI ĐÃ NHẬN THÔNG TIN
+                </button>
+              )}
             </div>
           )}
 
