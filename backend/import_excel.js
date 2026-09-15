@@ -13,7 +13,11 @@ async function importExcel() {
     await Candidate.deleteMany({});
     console.log('Cleared existing candidates.');
 
-    const filePath = 'C:/Users/phamv/Downloads/TUYỂN THÀNH VIÊN BTC (Có Mã PV).xlsx';
+    const filePath = process.argv[2] || './candidate_data.xlsx';
+    if (!require('fs').existsSync(filePath)) {
+      console.log(`File not found: ${filePath}`);
+      process.exit(1);
+    }
     console.log(`Reading Excel file: ${filePath}`);
     const wb = xlsx.readFile(filePath);
     const ws = wb.Sheets[wb.SheetNames[0]];

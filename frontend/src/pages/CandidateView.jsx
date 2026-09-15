@@ -51,7 +51,7 @@ export default function CandidateView() {
       setQueuePosition(null);
     }
 
-    const all = [...data.waiting, ...data.interviewing, ...data.completed];
+    const all = [...data.waiting, ...(data.moving || []), ...data.interviewing, ...data.completed];
     const me = all.find(c => c.interviewCode === interviewCode);
     if (me) {
       setStatus(me.status);

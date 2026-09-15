@@ -23,7 +23,10 @@ export default function Board() {
   const fetchBoard = async () => {
     const res = await fetch('/api/board');
     const data = await res.json();
-    setBoardData(data);
+    setBoardData({
+      ...data,
+      waiting: [...(data.moving || []), ...(data.waiting || [])]
+    });
   };
 
   const formatTime = (isoString) => {

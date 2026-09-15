@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2 } from 'lucide-react';
+import io from 'socket.io-client';
 import Board from './Board';
 import ChatWidget from '../components/ChatWidget';
 import MacBackground from '../components/MacBackground';
@@ -8,6 +9,7 @@ import MacWindow from '../components/MacWindow';
 
 export default function AdminView() {
   const navigate = useNavigate();
+  const socketRef = useRef(null);
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [evaluations, setEvaluations] = useState([]);
   const [usersList, setUsersList] = useState([]);
@@ -20,9 +22,13 @@ export default function AdminView() {
   const [viewDepartment, setViewDepartment] = useState(user.department || 'TCKT');
 
   useEffect(() => {
+    socketRef.current = io('/');
     fetchBoard();
     const interval = setInterval(fetchBoard, 3000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      socketRef.current.disconnect();
+    };
   }, [viewDepartment]);
 
   useEffect(() => {
@@ -54,7 +60,10 @@ export default function AdminView() {
     const query = viewDepartment ? `?department=${viewDepartment}` : '';
     const res = await fetch(`/api/board${query}`);
     const data = await res.json();
-    setBoardData(data);
+    setBoardData({
+      ...data,
+      waiting: [...(data.moving || []), ...(data.waiting || [])]
+    });
   };
 
   const fetchEvaluations = async () => {
@@ -95,10 +104,6 @@ export default function AdminView() {
   const handleCleanData = async () => {
     const password = window.prompt("CẢNH BÁO: Hành động này sẽ làm sạch toàn bộ dữ liệu phỏng vấn. Vui lòng nhập mật khẩu:");
     if (password === null) return;
-    if (password !== "Việt Bách đẹp chai vkl") {
-      alert("Sai mật khẩu xác nhận!");
-      return;
-    }
     
     const res = await fetch('/api/admin/clean-data', {
       method: 'POST',

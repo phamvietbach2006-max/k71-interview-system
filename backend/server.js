@@ -15,6 +15,34 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'tckt_super_secret_key';
+
+const authMiddleware = (req, res, next) => {
+  // Allow public/read-only routes without token
+  if (req.path === '/login' || req.path === '/tv-board' || req.path === '/board') return next();
+  
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, message: 'Unauthorized: No token provided' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    
+    // For sensitive Admin routes (optional, if we want strict roles)
+    if (req.path.startsWith('/admin') && req.user.role !== 'admin') {
+       return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
+    }
+    
+    next();
+  } catch (e) {
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+  }
+};
+app.use('/api', authMiddleware);
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -134,28 +162,33 @@ app.post('/api/login', async (req, res) => {
     let candidates = await Candidate.find({ interviewCode: code });
     if (candidates.length > 0) {
       if (candidates.length === 1) {
-        return res.json({ success: true, role: 'candidate', interviewCode: candidates[0].interviewCode, department: candidates[0].department });
+        const token = jwt.sign({ id: candidates[0]._id, role: 'candidate', interviewCode: candidates[0].interviewCode }, JWT_SECRET, { expiresIn: '12h' });
+        return res.json({ success: true, role: 'candidate', interviewCode: candidates[0].interviewCode, department: candidates[0].department, token });
       } else {
         if (!department) {
-          // Ask for department selection if applied to both
           return res.json({ success: true, requireDepartment: true, departments: candidates.map(c => c.department) });
         }
         let selectedCand = candidates.find(c => c.department === department);
         if (selectedCand) {
-          return res.json({ success: true, role: 'candidate', interviewCode: selectedCand.interviewCode, department: selectedCand.department });
+          const token = jwt.sign({ id: selectedCand._id, role: 'candidate', interviewCode: selectedCand.interviewCode }, JWT_SECRET, { expiresIn: '12h' });
+          return res.json({ success: true, role: 'candidate', interviewCode: selectedCand.interviewCode, department: selectedCand.department, token });
         }
       }
     }
 
     // 2. Check if Staff (case-insensitive)
-    let user = await User.findOne({ username: { $regex: new RegExp(`^${code}$`, 'i') } });
+    const escapedCode = code.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    let user = await User.findOne({ username: { $regex: new RegExp(`^${escapedCode}$`, 'i') } });
     if (user) {
       if (user.role === 'interviewer') {
         if (tableNumber) user.tableNumber = tableNumber;
         if (roomNumber) user.roomNumber = roomNumber;
+        user.status = 'active';
+        await user.save();
+        io.emit('staff_update');
       }
-      user.status = 'active';
-      await user.save();
+      
+      const token = jwt.sign({ id: user._id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '12h' });
       return res.json({ 
         success: true, 
         role: user.role, 
@@ -165,11 +198,12 @@ app.post('/api/login', async (req, res) => {
         roles: user.roles,
         tableNumber: user.tableNumber,
         roomNumber: user.roomNumber,
-        autoAssign: user.autoAssign
+        autoAssign: user.autoAssign,
+        token
       });
     }
 
-    return res.status(401).json({ success: false, message: 'Sai Mã đăng nhập.' });
+    return res.status(401).json({ success: false, message: 'Invalid code or user not found' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -182,7 +216,7 @@ app.get('/api/board', async (req, res) => {
   const moving = await Candidate.find({ status: 'moving', ...filter });
   const interviewing = await Candidate.find({ status: 'interviewing', ...filter });
   const completed = await Candidate.find({ status: 'completed', ...filter });
-  res.json({ waiting: [...waiting, ...moving], interviewing, completed });
+  res.json({ waiting, moving, interviewing, completed });
 });
 
 app.get('/api/tv-board', async (req, res) => {
@@ -209,18 +243,15 @@ app.post('/api/evaluation', async (req, res) => {
     });
     await evaluation.save();
 
-    const candidate = await Candidate.findOne({ interviewCode, department });
-    if (candidate) {
-      candidate.status = 'completed';
-      candidate.interviewEndTime = new Date();
-      await candidate.save();
-    }
+    await Candidate.updateOne(
+      { interviewCode, department }, 
+      { $set: { status: 'completed', interviewEndTime: new Date() } }
+    );
 
-    const user = await User.findOne({ username: interviewerUsername });
-    if (user) {
-      user.status = 'active'; // Back to available
-      await user.save();
-    }
+    await User.updateOne(
+      { username: interviewerUsername },
+      { $set: { status: 'active' } }
+    );
 
     io.emit('board_update');
     res.json({ success: true });
@@ -247,7 +278,8 @@ app.post('/api/staff/status', async (req, res) => {
 
 app.post('/api/admin/clean-data', async (req, res) => {
   const { password } = req.body;
-  if (password !== 'Việt Bách đẹp chai vkl') {
+  const expectedPassword = process.env.ADMIN_CLEAN_PASSWORD || 'Việt Bách đẹp chai vkl';
+  if (password !== expectedPassword) {
     return res.status(401).json({ success: false, message: 'Sai mật khẩu!' });
   }
   try {
@@ -309,8 +341,8 @@ app.get('/api/staff', async (req, res) => {
 
 app.get('/api/messages', async (req, res) => {
   try {
-    const messages = await Message.find().sort({ createdAt: 1 });
-    res.json(messages);
+    const messages = await Message.find().sort({ createdAt: -1 }).limit(100);
+    res.json(messages.reverse());
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -319,6 +351,16 @@ app.get('/api/messages', async (req, res) => {
 app.post('/api/messages', async (req, res) => {
   try {
     const { sender, senderRole, receiver, content } = req.body;
+    
+    // Group chat requires admin privileges
+    if (receiver === 'group') {
+      const user = await User.findOne({ username: sender });
+      const adminNames = ['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'];
+      if (!user || user.role !== 'admin' || !adminNames.includes(user.fullName)) {
+        return res.status(403).json({ error: 'Chỉ Admin mới có quyền gửi thông báo chung!' });
+      }
+    }
+
     const msg = new Message({ sender, senderRole, receiver, content });
     await msg.save();
     io.emit('new_message', msg);
@@ -375,26 +417,30 @@ app.post('/api/interviewer/cancel', async (req, res) => {
     const interviewer = await User.findOne({ username });
     if (!interviewer) return res.status(400).json({ success: false, message: 'Invalid interviewer' });
 
-    const candidate = await Candidate.findOne({ 
-      interviewCode,
-      department: interviewer.department,
-      status: { $in: ['moving', 'interviewing'] } 
-    });
+    const candidate = await Candidate.findOneAndUpdate(
+      { 
+        interviewCode,
+        department: interviewer.department,
+        status: { $in: ['moving', 'interviewing'] } 
+      },
+      { 
+        $set: { 
+          status: 'waiting', 
+          assignedTable: null, 
+          assignedRoom: null, 
+          checkInTime: new Date(0) 
+        } 
+      },
+      { new: true }
+    );
     if (!candidate) return res.status(400).json({ success: false, message: 'Ứng viên không trong trạng thái đang gọi/phỏng vấn' });
 
-    interviewer.status = 'active';
-    await interviewer.save();
-
-    // Set checkInTime to 0 so they sort to the very top of the waiting queue
-    candidate.status = 'waiting';
-    candidate.assignedTable = null;
-    candidate.checkInTime = new Date(0);
-    await candidate.save();
+    await User.updateOne({ _id: interviewer._id }, { status: 'active' });
 
     io.emit('board_update');
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -411,16 +457,14 @@ app.post('/api/interviewer/call', async (req, res) => {
     });
     if (busyCandidate) return res.status(400).json({ success: false, message: 'Bàn này đang có người phỏng vấn!' });
 
-    const candidate = await Candidate.findOne({ interviewCode, status: 'waiting', department: interviewer.department });
+    const candidate = await Candidate.findOneAndUpdate(
+      { interviewCode, status: 'waiting', department: interviewer.department },
+      { $set: { status: 'moving', assignedRoom: interviewer.roomNumber, assignedTable: interviewer.tableNumber } },
+      { new: true }
+    );
     if (!candidate) return res.status(400).json({ success: false, message: 'Candidate no longer available in your department' });
 
-    candidate.status = 'moving';
-    candidate.assignedRoom = interviewer.roomNumber;
-    candidate.assignedTable = interviewer.tableNumber;
-    await candidate.save();
-
-    interviewer.status = 'interviewing';
-    await interviewer.save();
+    await User.updateOne({ _id: interviewer._id }, { status: 'interviewing' });
 
     io.emit('candidate_assigned', { candidate, roomNumber: interviewer.roomNumber, tableNumber: interviewer.tableNumber });
     io.emit('board_update');

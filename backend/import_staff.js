@@ -16,7 +16,11 @@ async function importStaff() {
     // Clear existing users
     await User.deleteMany({});
     
-    const filePath = 'C:/Users/phamv/Downloads/Danh sách Ban tiếp tục nhiệm kỳ 2025 - 2027, năm 2026 (1).xlsx';
+    const filePath = process.argv[2] || './staff_data.xlsx';
+    if (!require('fs').existsSync(filePath)) {
+      console.log(`File not found: ${filePath}`);
+      process.exit(1);
+    }
     const wb = xlsx.readFile(filePath);
     const ws = wb.Sheets[wb.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(ws);
