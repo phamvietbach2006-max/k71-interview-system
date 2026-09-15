@@ -96,7 +96,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start md:justify-center bg-slate-50 p-4 font-sans relative overflow-x-hidden overflow-y-auto">
+    <div className="flex-1 w-full flex flex-col items-center justify-center bg-slate-50 p-4 font-sans relative overflow-x-hidden overflow-y-auto py-8">
       <MacBackground />
 
       {/* Floating Props from Artboard 1 */}
@@ -115,12 +115,12 @@ export default function Login() {
         <img src="/assets/props/prop_16.png" alt="Prop" className="absolute top-[75%] left-[15%] w-14 opacity-75 animate-float-slow" />
       </div>
 
-      {/* Dual Logos */}
-      <div className="z-10 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-12 md:mt-0 mb-8 md:mb-12 w-full px-4">
-        <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-[85%] max-w-[22rem] md:max-w-none md:w-[24rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up" />
-        <span className="text-6xl md:text-7xl font-black text-white/70 drop-shadow-md animate-fade-in">&amp;</span>
-        <img src="/assets/title_bcs.png" alt="Ban Cán sự năm nhất" className="w-[85%] max-w-[22rem] md:max-w-none md:w-[24rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up animation-delay-100" />
-      </div>
+              {/* Dual Logos */}
+        <div className="z-10 flex flex-row items-center justify-center gap-2 md:gap-8 mb-6 md:mb-12 w-full px-4 max-w-2xl">
+          <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-[45%] md:w-[24rem] lg:w-[32rem] object-contain drop-shadow-2xl transform animate-fade-in-up" />
+          <span className="text-3xl md:text-7xl font-black text-white/70 drop-shadow-md animate-fade-in">&amp;</span>
+          <img src="/assets/title_bcs.png" alt="Ban Cán sự năm nhất" className="w-[45%] md:w-[24rem] lg:w-[32rem] object-contain drop-shadow-2xl transform animate-fade-in-up animation-delay-100" />
+        </div>
 
       <div className="bg-white/90 backdrop-blur-2xl p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.1)] w-full max-w-md border border-white z-10 animate-fade-in-up mb-12">
         
