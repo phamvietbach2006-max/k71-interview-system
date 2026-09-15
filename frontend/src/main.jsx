@@ -19,7 +19,14 @@ window.fetch = async (...args) => {
       }
     } catch (e) {}
   }
-  return originalFetch(resource, config);
+  const res = await originalFetch(resource, config);
+  
+  if (res.status === 401 && resource !== '/api/login') {
+    localStorage.removeItem('user');
+    window.location.href = '/';
+  }
+  
+  return res;
 };
 
 createRoot(document.getElementById('root')).render(
