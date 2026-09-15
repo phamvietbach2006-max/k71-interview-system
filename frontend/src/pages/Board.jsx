@@ -35,18 +35,8 @@ export default function Board() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
-      <MacBackground />
-      
-      <div className="w-full max-w-[1600px] h-[90vh] z-10 flex flex-col">
-        <div className="flex justify-between items-end mb-8 px-4">
-          <div>
-            <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="h-24 md:h-32 object-contain drop-shadow-md mb-2 hover:scale-105 transition-transform" />
-            <p className="text-xl text-slate-800 font-bold bg-white/50 inline-block px-4 py-1 rounded-full backdrop-blur-sm shadow-sm border border-white/60">Hệ thống điều phối ứng viên thời gian thực</p>
-          </div>
-        </div>
-
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+    <div className="w-full h-full flex flex-col font-sans">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 h-full min-h-[500px]">
           
           {/* Waiting Column */}
           <div className="bg-white/50 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-white/60 overflow-hidden flex flex-col h-full transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
@@ -132,7 +122,6 @@ export default function Board() {
           </div>
 
         </div>
-      </div>
     </div>
   );
 }
