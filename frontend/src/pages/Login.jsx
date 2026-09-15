@@ -91,14 +91,34 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 font-sans relative overflow-hidden">
       <MacBackground />
 
-      <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[2rem] shadow-2xl w-full max-w-md border border-white/50 z-10 animate-fade-in-up">
-        <div className="flex justify-center mb-8 relative">
-          <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-full drop-shadow-lg transform hover:scale-105 transition-transform" />
-        </div>
+      {/* Floating Props from Artboard 1 */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <img src="/assets/props/prop_19.png" alt="Prop" className="absolute top-[10%] left-[10%] w-24 md:w-32 opacity-80 animate-float-slow" />
+        <img src="/assets/props/prop_18.png" alt="Prop" className="absolute top-[15%] right-[15%] w-20 md:w-28 opacity-80 animate-float-fast" />
+        <img src="/assets/props/prop_12.png" alt="Prop" className="absolute bottom-[20%] left-[5%] w-24 md:w-32 opacity-90 animate-float-reverse" />
+        <img src="/assets/props/prop_11.png" alt="Prop" className="absolute top-[40%] left-[8%] w-12 md:w-16 opacity-70 animate-float-fast" />
+        <img src="/assets/props/prop_15.png" alt="Prop" className="absolute top-[30%] right-[8%] w-16 md:w-20 opacity-80 animate-float-slow" />
+        <img src="/assets/props/prop_10.png" alt="Prop" className="absolute bottom-[30%] right-[10%] w-14 md:w-18 opacity-75 animate-float-reverse" />
+        <img src="/assets/props/prop_9.png" alt="Prop" className="absolute bottom-[10%] left-[20%] w-16 md:w-20 opacity-80 animate-float-slow" />
+        <img src="/assets/props/prop_14.png" alt="Prop" className="absolute bottom-[15%] right-[25%] w-16 md:w-24 opacity-85 animate-float-fast" />
+        <img src="/assets/props/prop_7.png" alt="Prop" className="absolute top-[50%] left-[3%] w-12 md:w-16 opacity-90 animate-float-slow" />
+        <img src="/assets/props/prop_17.png" alt="Prop" className="absolute top-[60%] right-[4%] w-12 md:w-16 opacity-80 animate-float-reverse" />
+        <img src="/assets/props/prop_8.png" alt="Prop" className="absolute top-[20%] left-[25%] w-12 opacity-60 animate-float-fast" />
+        <img src="/assets/props/prop_16.png" alt="Prop" className="absolute top-[75%] left-[15%] w-14 opacity-75 animate-float-slow" />
+      </div>
 
+      {/* Dual Logos Above the Form */}
+      <div className="z-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 mb-8">
+        <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-56 md:w-72 drop-shadow-xl transform hover:scale-105 transition-transform animate-fade-in-up" />
+        <span className="text-5xl font-black text-slate-800/20 drop-shadow-sm animate-fade-in">&amp;</span>
+        <img src="/assets/title_bcs.png" alt="Ban Cán sự năm nhất" className="w-56 md:w-72 drop-shadow-xl transform hover:scale-105 transition-transform animate-fade-in-up animation-delay-100" />
+      </div>
+
+      <div className="bg-white/90 backdrop-blur-2xl p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.1)] w-full max-w-md border border-white z-10 animate-fade-in-up">
+        
         <form onSubmit={handleLogin} className="space-y-5">
           {step === 1 && (
             <div className="space-y-1 animate-fade-in">
