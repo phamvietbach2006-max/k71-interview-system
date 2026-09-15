@@ -34,22 +34,35 @@ const assignCandidates = async () => {
     const availableInterviewers = await User.find({ 
       role: 'interviewer', 
       status: 'active', 
+      roomNumber: { $ne: null },
       tableNumber: { $ne: null },
       autoAssign: { $ne: false } // only assign if autoAssign is true
     });
     if (availableInterviewers.length === 0) return;
 
     for (let interviewer of availableInterviewers) {
+      // Concurrency check: Ensure no candidate is currently moving or interviewing at this room/table
+      const busyCandidate = await Candidate.findOne({
+        assignedRoom: interviewer.roomNumber,
+        assignedTable: interviewer.tableNumber,
+        status: { $in: ['moving', 'interviewing'] }
+      });
+
+      if (busyCandidate) {
+        continue; // Skip this interviewer, the table is busy
+      }
+
       const waitingCandidate = await Candidate.findOne({ status: 'waiting' }).sort({ checkInTime: 1 });
       if (waitingCandidate) {
         waitingCandidate.status = 'moving';
+        waitingCandidate.assignedRoom = interviewer.roomNumber;
         waitingCandidate.assignedTable = interviewer.tableNumber;
         await waitingCandidate.save();
 
         interviewer.status = 'interviewing';
         await interviewer.save();
 
-        io.emit('candidate_assigned', { candidate: waitingCandidate, tableNumber: interviewer.tableNumber });
+        io.emit('candidate_assigned', { candidate: waitingCandidate, roomNumber: interviewer.roomNumber, tableNumber: interviewer.tableNumber });
         io.emit('board_update');
       }
     }
@@ -107,7 +120,7 @@ io.on('connection', (socket) => {
 
 // Unified Login API
 app.post('/api/login', async (req, res) => {
-  let { code, tableNumber } = req.body;
+  let { code, tableNumber, roomNumber } = req.body;
   if (code) code = code.trim().toUpperCase(); // Normalize for PVxxx and MSSV matching
   
   try {
@@ -120,24 +133,24 @@ app.post('/api/login', async (req, res) => {
     // 2. Check if Staff (case-insensitive)
     let user = await User.findOne({ username: { $regex: new RegExp(`^${code}$`, 'i') } });
     if (user) {
-      if (user.role === 'interviewer' && tableNumber) {
-        user.tableNumber = tableNumber;
+      if (user.role === 'interviewer') {
+        if (tableNumber) user.tableNumber = tableNumber;
+        if (roomNumber) user.roomNumber = roomNumber;
       }
       user.status = 'active';
       await user.save();
       return res.json({ 
         success: true, 
         role: user.role, 
-        username: user.username, 
+        username: user.username,
         fullName: user.fullName,
         tableNumber: user.tableNumber,
+        roomNumber: user.roomNumber,
         autoAssign: user.autoAssign
       });
     }
 
-    // 3. Not found
-    return res.status(401).json({ success: false, message: 'Sai Mã đăng nhập.' });
-
+    return res.status(401).json({ success: false, message: 'Invalid code' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -155,6 +168,7 @@ app.get('/api/tv-board', async (req, res) => {
   const fields = {
     interviewCode: 1,
     status: 1,
+    assignedRoom: 1,
     assignedTable: 1,
     'applicationData.Họ và tên': 1,
     checkInTime: 1
@@ -222,6 +236,7 @@ app.post('/api/admin/clean-data', async (req, res) => {
     await Candidate.updateMany({}, {
       $set: { 
         status: 'active', 
+        assignedRoom: null,
         assignedTable: null,
         checkInTime: null,
         interviewEndTime: null
@@ -369,17 +384,25 @@ app.post('/api/interviewer/call', async (req, res) => {
     const interviewer = await User.findOne({ username, role: 'interviewer', status: 'active' });
     if (!interviewer) return res.status(400).json({ success: false, message: 'Interviewer not ready' });
 
+    const busyCandidate = await Candidate.findOne({
+      assignedRoom: interviewer.roomNumber,
+      assignedTable: interviewer.tableNumber,
+      status: { $in: ['moving', 'interviewing'] }
+    });
+    if (busyCandidate) return res.status(400).json({ success: false, message: 'Bàn này đang có người phỏng vấn!' });
+
     const candidate = await Candidate.findOne({ interviewCode, status: 'waiting' });
     if (!candidate) return res.status(400).json({ success: false, message: 'Candidate no longer available' });
 
     candidate.status = 'moving';
+    candidate.assignedRoom = interviewer.roomNumber;
     candidate.assignedTable = interviewer.tableNumber;
     await candidate.save();
 
     interviewer.status = 'interviewing';
     await interviewer.save();
 
-    io.emit('candidate_assigned', { candidate, tableNumber: interviewer.tableNumber });
+    io.emit('candidate_assigned', { candidate, roomNumber: interviewer.roomNumber, tableNumber: interviewer.tableNumber });
     io.emit('board_update');
     res.json({ success: true });
   } catch (err) {
@@ -388,7 +411,7 @@ app.post('/api/interviewer/call', async (req, res) => {
 });
 
 app.post('/api/staff/switch-role', async (req, res) => {
-  const { username, targetRole, tableNumber } = req.body;
+  const { username, targetRole, tableNumber, roomNumber } = req.body;
   try {
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
@@ -399,11 +422,12 @@ app.post('/api/staff/switch-role', async (req, res) => {
     }
 
     user.role = targetRole;
-    if (targetRole === 'interviewer' && tableNumber) {
-      user.tableNumber = tableNumber;
+    if (targetRole === 'interviewer') {
+      if (tableNumber) user.tableNumber = tableNumber;
+      if (roomNumber) user.roomNumber = roomNumber;
     }
     await user.save();
-    res.json({ success: true, role: user.role, tableNumber: user.tableNumber });
+    res.json({ success: true, role: user.role, tableNumber: user.tableNumber, roomNumber: user.roomNumber });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

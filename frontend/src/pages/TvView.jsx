@@ -5,7 +5,6 @@ import MacBackground from '../components/MacBackground';
 
 export default function TvView() {
   const [boardData, setBoardData] = useState({ waiting: [], moving: [], interviewing: [] });
-  const [audioEnabled, setAudioEnabled] = useState(false);
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -60,8 +59,9 @@ export default function TvView() {
                       </div>
                     </div>
                     
-                    <div className="bg-blue-600 rounded-[2rem] p-8 text-center min-w-[250px] shadow-2xl border border-blue-400/50">
-                      <div className="text-blue-200 font-black text-xl uppercase tracking-widest mb-1">Bàn Số</div>
+                    <div className="bg-blue-600 rounded-[2rem] p-8 text-center min-w-[250px] shadow-2xl border border-blue-400/50 flex flex-col justify-center">
+                      {c.assignedRoom && <div className="text-blue-100 font-bold text-xl uppercase tracking-widest mb-2 bg-blue-700/50 rounded-lg py-1">PHÒNG {c.assignedRoom}</div>}
+                      <div className="text-blue-200 font-black text-xl uppercase tracking-widest mb-1">BÀN SỐ</div>
                       <div className="text-7xl md:text-9xl font-black text-white leading-none">{c.assignedTable}</div>
                     </div>
                   </div>
@@ -100,6 +100,12 @@ export default function TvView() {
             </div>
           </div>
 
+          {/* QR Code */}
+          <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-white/10 p-6 flex flex-col items-center justify-center shadow-lg">
+            <h2 className="text-xl font-bold text-slate-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2 w-full text-center">Quét Mã QR Để Đăng Nhập</h2>
+            <img src="/assets/qr.jpeg" alt="QR Code" className="w-48 h-48 rounded-xl object-cover shadow-lg border-4 border-white/20" />
+          </div>
+
           {/* Recently Called */}
           <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-white/10 p-8 h-1/3 min-h-[300px] flex flex-col">
             <h2 className="text-xl font-bold text-slate-400 uppercase tracking-wider mb-6 border-b border-white/10 pb-4">Vừa Thông Báo</h2>
@@ -111,7 +117,7 @@ export default function TvView() {
                   <div key={c.interviewCode} className="flex justify-between items-center text-slate-400 border-b border-white/5 pb-2 last:border-0">
                     <span className="font-bold">{c.interviewCode}</span>
                     <span className="bg-blue-900/50 text-blue-300 px-3 py-1 rounded-lg text-sm font-bold border border-blue-700/50">
-                      Bàn {c.assignedTable}
+                      {c.assignedRoom ? `P.${c.assignedRoom} - ` : ''}Bàn {c.assignedTable}
                     </span>
                   </div>
                 ))

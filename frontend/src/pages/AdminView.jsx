@@ -13,6 +13,7 @@ export default function AdminView() {
   const [activeTab, setActiveTab] = useState('board'); // board, evaluations
   const [showTablePrompt, setShowTablePrompt] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
+  const [roomNumber, setRoomNumber] = useState('');
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
@@ -27,17 +28,18 @@ export default function AdminView() {
 
   const switchRole = async (e) => {
     e.preventDefault();
-    if (!tableNumber) return alert('Vui lòng nhập số bàn');
+    if (!tableNumber || !roomNumber) return alert('Vui lòng nhập số phòng và số bàn');
     
     const res = await fetch('/api/staff/switch-role', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: user.username, targetRole: 'interviewer', tableNumber })
+      body: JSON.stringify({ username: user.username, targetRole: 'interviewer', roomNumber, tableNumber })
     });
     const data = await res.json();
     if (data.success) {
       const stored = JSON.parse(localStorage.getItem('user'));
       stored.role = 'interviewer';
+      stored.roomNumber = roomNumber;
       stored.tableNumber = tableNumber;
       // Auto Assign remains true by default
       localStorage.setItem('user', JSON.stringify(stored));
@@ -58,6 +60,7 @@ export default function AdminView() {
   };
 
   const getWaitMinutes = (checkInTime) => {
+    if (!checkInTime || new Date(checkInTime).getTime() === 0) return 0;
     return Math.floor((new Date() - new Date(checkInTime)) / 60000);
   };
 
@@ -80,6 +83,14 @@ export default function AdminView() {
     } else {
       alert("Lỗi: " + data.message);
     }
+  };
+
+  const handleManualCheckIn = () => {
+    const code = window.prompt("Nhập MSSV (hoặc Mã PV) của ứng viên để Check-in hộ:");
+    if (!code) return;
+    
+    socketRef.current.emit('candidate_checkin', { interviewCode: code.trim().toUpperCase() });
+    alert(`Đã gửi yêu cầu check-in cho ${code.trim().toUpperCase()}`);
   };
 
   const exportCSV = () => {
@@ -130,6 +141,12 @@ export default function AdminView() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button 
+              onClick={handleManualCheckIn}
+              className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+            >
+              <Users size={16} /> Check-in Hộ
+            </button>
             {['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'].includes(user.fullName) && (
               <>
                 <button 
@@ -291,21 +308,38 @@ export default function AdminView() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
           <form onSubmit={switchRole} className="bg-white/90 backdrop-blur-xl rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden flex flex-col p-8 border border-white/50 animate-fade-in-up">
             <h3 className="text-xl font-black text-slate-800 tracking-tight mb-4 text-center">Chuyển sang Người Phỏng Vấn</h3>
-            <p className="text-sm font-medium text-slate-500 mb-6 text-center">Vui lòng nhập số bàn bạn sẽ phụ trách:</p>
-            <div className="relative mb-8 group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <Hash size={20} />
+            
+            <div className="space-y-4 mb-8">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <Hash size={20} />
+                </div>
+                <input 
+                  type="text" 
+                  required
+                  autoFocus
+                  placeholder="Số phòng (VD: 1, 2...)"
+                  value={roomNumber}
+                  onChange={(e) => setRoomNumber(e.target.value)}
+                  className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800"
+                />
               </div>
-              <input 
-                type="text" 
-                required
-                autoFocus
-                placeholder="VD: 1, 2, 3..."
-                value={tableNumber}
-                onChange={(e) => setTableNumber(e.target.value)}
-                className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800"
-              />
+
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <Hash size={20} />
+                </div>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Số bàn (VD: 1, 2...)"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
+                  className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800"
+                />
+              </div>
             </div>
+
             <div className="flex gap-3">
               <button type="button" onClick={() => setShowTablePrompt(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3.5 rounded-xl transition-colors">Hủy</button>
               <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-md transition-all">Xác nhận</button>

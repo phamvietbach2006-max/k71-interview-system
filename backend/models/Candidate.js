@@ -8,6 +8,7 @@ const candidateSchema = new mongoose.Schema({
     default: 'active' 
   },
   checkInTime: { type: Date }, // To calculate waiting time
+  assignedRoom: { type: String, default: null },
   assignedTable: { type: String, default: null }, // Table number assigned to
   interviewEndTime: { type: Date },
   applicationData: { type: Object, default: {} }, // Excel data

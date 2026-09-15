@@ -185,7 +185,9 @@ export default function InterviewerView() {
               <div className="flex items-center gap-4">
                 <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm"><User size={28} /></div>
                 <div>
-                  <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-sm">Bàn Số {user.tableNumber}</h1>
+                  <h1 className="text-3xl font-extrabold tracking-tight drop-shadow-sm">
+                    {user.roomNumber ? `P.${user.roomNumber} - ` : ''}Bàn {user.tableNumber}
+                  </h1>
                   <p className="text-blue-200 text-sm mt-1 font-medium">Interviewer: {user.fullName || user.username}</p>
                 </div>
               </div>

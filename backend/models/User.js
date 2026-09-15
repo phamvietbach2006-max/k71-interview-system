@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     enum: ['active', 'break', 'interviewing'], 
     default: 'active' 
   },
+  roomNumber: { type: String, default: null },
   tableNumber: { type: String, default: null }, // Only for interviewers
   autoAssign: { type: Boolean, default: false } // Toggle auto/manual candidate dispatch
 }, { timestamps: true });

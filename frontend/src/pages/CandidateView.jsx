@@ -8,6 +8,8 @@ export default function CandidateView() {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState('active'); // active, waiting, moving, interviewing, completed
   const [assignedTable, setAssignedTable] = useState(null);
+  const [assignedRoom, setAssignedRoom] = useState(null);
+  const [queuePosition, setQueuePosition] = useState(null);
   const [flash, setFlash] = useState(false);
   const socketRef = useRef(null);
 
@@ -24,6 +26,7 @@ export default function CandidateView() {
       if (data.candidate.interviewCode === stored.interviewCode) {
         setStatus('moving');
         setAssignedTable(data.tableNumber);
+        setAssignedRoom(data.roomNumber);
         playAlertSound();
         startFlashing();
       }
@@ -39,11 +42,21 @@ export default function CandidateView() {
   const fetchStatus = async (interviewCode) => {
     const res = await fetch('/api/board');
     const data = await res.json();
+    
+    // Find queue position if in waiting
+    const wIndex = data.waiting.findIndex(c => c.interviewCode === interviewCode);
+    if (wIndex !== -1) {
+      setQueuePosition(wIndex + 1);
+    } else {
+      setQueuePosition(null);
+    }
+
     const all = [...data.waiting, ...data.interviewing, ...data.completed];
     const me = all.find(c => c.interviewCode === interviewCode);
     if (me) {
       setStatus(me.status);
       setAssignedTable(me.assignedTable);
+      setAssignedRoom(me.assignedRoom);
     }
   };
 
@@ -108,7 +121,12 @@ export default function CandidateView() {
           {status === 'waiting' && (
             <div className="animate-fade-in">
               <div className="flex justify-center mb-6 text-orange-400"><Clock size={64} className="animate-pulse" strokeWidth={1.5} /></div>
-              <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 mb-4 tracking-tight drop-shadow-sm">ĐANG CHỜ</div>
+              <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 mb-2 tracking-tight drop-shadow-sm">ĐANG CHỜ</div>
+              {queuePosition && (
+                <div className="bg-orange-100 text-orange-800 font-bold px-4 py-2 rounded-xl mb-4 text-lg border border-orange-200">
+                  Thứ tự của bạn: <span className="text-2xl">{queuePosition}</span>
+                </div>
+              )}
               <p className="text-slate-500 text-lg font-medium leading-relaxed">Bạn đã được xếp vào hàng đợi.<br/>Vui lòng theo dõi màn hình khi đến lượt.</p>
             </div>
           )}
@@ -119,6 +137,7 @@ export default function CandidateView() {
               <div className="text-4xl font-black text-red-600 mb-2 tracking-tight">ĐẾN LƯỢT BẠN!</div>
               <p className="text-slate-600 mb-6 text-lg font-medium">Xin mời di chuyển ngay đến</p>
               <div className="bg-blue-50/80 backdrop-blur-sm border-2 border-blue-200 rounded-2xl py-6 mb-8 shadow-inner">
+                {assignedRoom && <span className="block text-2xl text-blue-600 font-black mb-2 uppercase">Phòng {assignedRoom}</span>}
                 <span className="block text-lg text-blue-600 font-black mb-1 tracking-widest">BÀN SỐ</span>
                 <span className="block text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-blue-600 to-indigo-700 drop-shadow-sm">{assignedTable}</span>
               </div>

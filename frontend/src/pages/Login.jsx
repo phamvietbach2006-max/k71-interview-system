@@ -7,6 +7,7 @@ export default function Login() {
   const [step, setStep] = useState(1);
   const [code, setCode] = useState('');
   const [tableNumber, setTableNumber] = useState('');
+  const [roomNumber, setRoomNumber] = useState('');
   const [tempUser, setTempUser] = useState(null);
   const navigate = useNavigate();
 
@@ -28,7 +29,7 @@ export default function Login() {
           navigate('/candidate');
         } else if (data.role === 'interviewer') {
           setTempUser(data);
-          setStep(2); // Ask for Table Number
+          setStep(2); // Ask for Table & Room Number
         } else {
           // Admin / Receptionist
           localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: data.role }));
@@ -38,16 +39,16 @@ export default function Login() {
         alert(data.message || "Đăng nhập thất bại!");
       }
     } 
-    // Step 2: Submit Table Number for Interviewer
+    // Step 2: Set Table & Room Number for Interviewer
     else if (step === 2) {
-      if (!tableNumber.trim()) {
-        alert("Vui lòng nhập số bàn!");
+      if (!tableNumber.trim() || !roomNumber.trim()) {
+        alert("Vui lòng nhập cả số phòng và số bàn!");
         return;
       }
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim(), tableNumber: tableNumber.trim() })
+        body: JSON.stringify({ code: code.trim(), roomNumber: roomNumber.trim(), tableNumber: tableNumber.trim() })
       });
       const data = await res.json();
 
@@ -56,6 +57,7 @@ export default function Login() {
           username: data.username, 
           fullName: data.fullName,
           role: data.role, 
+          roomNumber: data.roomNumber,
           tableNumber: data.tableNumber,
           autoAssign: data.autoAssign
         }));
@@ -98,23 +100,43 @@ export default function Login() {
           )}
 
           {step === 2 && (
-            <div className="space-y-1 animate-fade-in">
-              <label className="block text-sm font-bold text-slate-700 ml-1">
-                Xin chào {tempUser?.fullName || tempUser?.username}, bạn phụ trách bàn số mấy? <span className="text-blue-500">*</span>
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                  <Hash size={20} />
+            <div className="space-y-4 animate-fade-in">
+              <div className="space-y-1">
+                <label className="block text-sm font-bold text-slate-700 ml-1">
+                  Xin chào {tempUser?.fullName || tempUser?.username}, bạn phụ trách phòng số mấy? <span className="text-blue-500">*</span>
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                    <Hash size={20} />
+                  </div>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="VD: 1, 2, 3..." 
+                    value={roomNumber} 
+                    onChange={(e) => setRoomNumber(e.target.value)}
+                    className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                    autoFocus
+                  />
                 </div>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Nhập số bàn (VD: 1, 2...)"
-                  value={tableNumber}
-                  onChange={(e) => setTableNumber(e.target.value)}
-                  className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800"
-                  autoFocus
-                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-bold text-slate-700 ml-1">
+                  Và bàn số mấy? <span className="text-blue-500">*</span>
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                    <Monitor size={20} />
+                  </div>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="VD: 1, 2..." 
+                    value={tableNumber} 
+                    onChange={(e) => setTableNumber(e.target.value)}
+                    className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                  />
+                </div>
               </div>
               <button 
                 type="button" 
