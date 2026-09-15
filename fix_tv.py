@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
+﻿import codecs
+code = """import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import { Volume2, VolumeX, Monitor, BellRing } from "lucide-react";
 import MacBackground from "../components/MacBackground";
@@ -146,3 +147,7 @@ export default function TvView() {
     </div>
   );
 }
+"""
+with open("frontend/src/pages/TvView.jsx", "w", encoding="utf-8") as f:
+    f.write(code)
+print("done")
