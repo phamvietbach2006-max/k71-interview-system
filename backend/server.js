@@ -525,3 +525,38 @@ app.post('/api/users/update', async (req, res) => {
   }
   res.json({ success: true });
 });
+
+app.post('/api/users/add', async (req, res) => {
+  try {
+    const { username, fullName, department, roles } = req.body;
+    if (!username) return res.status(400).json({ error: "Thiếu username" });
+    
+    let u = await User.findOne({ username });
+    if (u) return res.status(400).json({ error: "Tài khoản đã tồn tại" });
+    
+    u = new User({
+      username,
+      fullName: fullName || username,
+      department: department || "TCKT",
+      roles: roles || ["interviewer"],
+      role: (roles && roles.length > 0) ? roles[0] : "interviewer"
+    });
+    await u.save();
+    res.json({ success: true, user: u });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/users/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    if (username.toLowerCase().includes("admin") || username.toLowerCase().includes("bach") || username === "Phạm Việt Bách") {
+      return res.status(400).json({ error: "Không thể xóa Super Admin" });
+    }
+    await User.deleteOne({ username });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
