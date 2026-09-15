@@ -163,7 +163,7 @@ app.post('/api/login', async (req, res) => {
     if (candidates.length > 0) {
       if (candidates.length === 1) {
         const token = jwt.sign({ id: candidates[0]._id, role: 'candidate', interviewCode: candidates[0].interviewCode }, JWT_SECRET, { expiresIn: '12h' });
-        return res.json({ success: true, role: 'candidate', interviewCode: candidates[0].interviewCode, department: candidates[0].department, token });
+        return res.json({ success: true, role: 'candidate', interviewCode: candidates[0].interviewCode, department: candidates[0].department, applicationData: candidates[0].applicationData, token });
       } else {
         if (!department) {
           return res.json({ success: true, requireDepartment: true, departments: candidates.map(c => c.department) });
@@ -171,7 +171,7 @@ app.post('/api/login', async (req, res) => {
         let selectedCand = candidates.find(c => c.department === department);
         if (selectedCand) {
           const token = jwt.sign({ id: selectedCand._id, role: 'candidate', interviewCode: selectedCand.interviewCode }, JWT_SECRET, { expiresIn: '12h' });
-          return res.json({ success: true, role: 'candidate', interviewCode: selectedCand.interviewCode, department: selectedCand.department, token });
+          return res.json({ success: true, role: 'candidate', interviewCode: selectedCand.interviewCode, department: selectedCand.department, applicationData: selectedCand.applicationData, token });
         }
       }
     }

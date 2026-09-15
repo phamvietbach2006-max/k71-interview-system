@@ -120,14 +120,17 @@ export default function CandidateView() {
 
           {status === 'waiting' && (
             <div className="animate-fade-in">
-              <div className="flex justify-center mb-6 text-orange-400"><Clock size={64} className="animate-pulse" strokeWidth={1.5} /></div>
-              <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 mb-2 tracking-tight drop-shadow-sm">ĐANG CHỜ</div>
+              <div className="flex justify-center mb-4 text-orange-400"><Clock size={48} className="animate-pulse" strokeWidth={1.5} /></div>
               {queuePosition && (
-                <div className="bg-orange-100 text-orange-800 font-bold px-4 py-2 rounded-xl mb-4 text-lg border border-orange-200">
-                  Thứ tự của bạn: <span className="text-2xl">{queuePosition}</span>
+                <div className="mb-4 flex flex-col items-center">
+                  <span className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-1">Thứ tự của bạn</span>
+                  <div className="text-8xl font-black text-slate-800 drop-shadow-md">
+                    {queuePosition}
+                  </div>
                 </div>
               )}
-              <p className="text-slate-500 text-lg font-medium leading-relaxed">Bạn đã được xếp vào hàng đợi.<br/>Vui lòng theo dõi màn hình khi đến lượt.</p>
+              <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 mb-4 tracking-tight drop-shadow-sm uppercase">Đang chờ</div>
+              <p className="text-slate-500 font-medium leading-relaxed">Bạn đã được xếp vào hàng đợi.<br/>Vui lòng theo dõi màn hình khi đến lượt.</p>
             </div>
           )}
 

@@ -29,18 +29,18 @@ export default function Login() {
           setTempUser({ code: code.trim(), departments: data.departments });
           setStep(1.5);
         } else if (data.role === 'candidate') {
-          localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate', department: data.department }));
-          navigate('/candidate');
+          setTempUser(data);
+          setStep(1.75); // Confirmation screen
         } else if (data.role === 'interviewer') {
           setTempUser(data);
           setStep(2); // Ask for Table & Room Number
         } else {
           // Admin / Receptionist
-          localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: data.role, department: data.department, roles: data.roles }));
+          localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: data.role, department: data.department, roles: data.roles, token: data.token }));
           navigate('/admin');
         }
       } else {
-        alert(data.message || "Đăng nhập thất bại!");
+        alert(data.message || "Không tìm thấy Mã số này. Vui lòng kiểm tra lại!");
       }
     } 
     // Step 1.5: Select Department for Candidate applying to both
@@ -53,11 +53,16 @@ export default function Login() {
       });
       const data = await res.json();
       if (data.success && data.role === 'candidate') {
-        localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate', department: data.department }));
-        navigate('/candidate');
+        setTempUser(data);
+        setStep(1.75);
       } else {
         alert(data.message || "Đăng nhập thất bại!");
       }
+    }
+    // Step 1.75: Confirm Candidate Info
+    else if (step === 1.75) {
+      localStorage.setItem('user', JSON.stringify({ interviewCode: tempUser.interviewCode, role: 'candidate', department: tempUser.department, token: tempUser.token }));
+      navigate('/candidate');
     }
     // Step 2: Set Table & Room Number for Interviewer
     else if (step === 2) {
@@ -162,6 +167,28 @@ export default function Login() {
             </div>
           )}
 
+          {step === 1.75 && tempUser && (
+            <div className="space-y-4 animate-fade-in text-center">
+              <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User size={40} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-800">Xác nhận thông tin</h2>
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-left space-y-3">
+                <p className="text-sm"><span className="text-slate-500 font-semibold">MSSV:</span> <span className="font-bold text-slate-800 text-lg ml-2">{tempUser.interviewCode}</span></p>
+                <p className="text-sm"><span className="text-slate-500 font-semibold">Họ và tên:</span> <span className="font-bold text-slate-800 text-lg ml-2">{tempUser.applicationData?.['Họ và tên'] || 'Không có dữ liệu'}</span></p>
+                <p className="text-sm"><span className="text-slate-500 font-semibold">Ban ứng tuyển:</span> <span className="font-bold text-slate-800 text-lg ml-2">{tempUser.department === 'TCKT' ? 'Ban Tổ chức - Kiểm tra' : 'Ban Cán sự năm nhất'}</span></p>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setStep(1)} className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">
+                  Nhập lại
+                </button>
+                <button type="submit" className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 transition-all">
+                  Xác nhận
+                </button>
+              </div>
+            </div>
+          )}
+
           {step === 2 && (
             <div className="space-y-4 animate-fade-in">
               <div className="space-y-1">
@@ -211,9 +238,11 @@ export default function Login() {
             </div>
           )}
           
-          <button type="submit" className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 mt-8 rounded-2xl font-black text-lg shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
-            <LogIn size={20} /> {step === 1 ? 'TIẾP TỤC' : step === 1.5 ? 'XÁC NHẬN VÀO PHÒNG CHỜ' : 'XÁC NHẬN VÀO BÀN'}
-          </button>
+          {step !== 1.75 && (
+            <button type="submit" className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 mt-8 rounded-2xl font-black text-lg shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
+              <LogIn size={20} /> {step === 1 ? 'TIẾP TỤC' : step === 1.5 ? 'XÁC NHẬN VÀO PHÒNG CHỜ' : 'XÁC NHẬN VÀO BÀN'}
+            </button>
+          )}
         </form>
 
         <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">

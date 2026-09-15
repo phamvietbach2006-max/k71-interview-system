@@ -58,12 +58,12 @@ export default function TvView() {
       <MacBackground />
 
       <div className="w-full flex justify-center py-6 z-20 bg-slate-900/80 backdrop-blur-md border-b border-white/10">
-        <div className="flex items-center gap-6 bg-white p-4 rounded-3xl shadow-[0_0_50px_rgba(255,255,255,0.2)]">
-          <div className="text-center pr-6 border-r border-slate-200">
-            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-widest">Quét mã QR</h1>
-            <p className="text-slate-500 font-bold">để xem thứ tự của bạn</p>
+        <div className="flex items-center gap-6 bg-white p-6 rounded-[2.5rem] shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+          <div className="text-center pr-10 border-r-2 border-slate-200">
+            <h1 className="text-5xl font-black text-slate-800 uppercase tracking-widest mb-2">Quét mã QR</h1>
+            <p className="text-slate-500 font-bold text-xl">để xem thứ tự của bạn</p>
           </div>
-          <img src="/assets/qr.jpeg" alt="QR Code" className="w-32 h-32 rounded-xl object-contain border-4 border-slate-100" />
+          <img src="/assets/qr.jpeg" alt="QR Code" className="w-56 h-56 rounded-3xl object-contain border-4 border-slate-100 shadow-inner" />
         </div>
       </div>
 
