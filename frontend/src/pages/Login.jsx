@@ -110,14 +110,14 @@ export default function Login() {
         <img src="/assets/props/prop_16.png" alt="Prop" className="absolute top-[75%] left-[15%] w-14 opacity-75 animate-float-slow" />
       </div>
 
-      {/* Dual Logos Above the Form */}
-      <div className="z-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 mb-8">
-        <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-56 md:w-72 drop-shadow-xl transform hover:scale-105 transition-transform animate-fade-in-up" />
-        <span className="text-5xl font-black text-slate-800/20 drop-shadow-sm animate-fade-in">&amp;</span>
-        <img src="/assets/title_bcs.png" alt="Ban Cán sự năm nhất" className="w-56 md:w-72 drop-shadow-xl transform hover:scale-105 transition-transform animate-fade-in-up animation-delay-100" />
+      {/* Dual Logos High in the Sky */}
+      <div className="absolute top-[8%] left-0 right-0 z-10 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-10 px-4 pointer-events-none">
+        <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-[18rem] md:w-[28rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up" />
+        <span className="text-5xl md:text-7xl font-black text-white/60 drop-shadow-md animate-fade-in">&amp;</span>
+        <img src="/assets/title_bcs.png" alt="Ban Cán sự năm nhất" className="w-[18rem] md:w-[28rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up animation-delay-100" />
       </div>
 
-      <div className="bg-white/90 backdrop-blur-2xl p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.1)] w-full max-w-md border border-white z-10 animate-fade-in-up">
+      <div className="bg-white/90 backdrop-blur-2xl p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.1)] w-full max-w-md border border-white z-10 animate-fade-in-up mt-32 md:mt-10">
         
         <form onSubmit={handleLogin} className="space-y-5">
           {step === 1 && (
