@@ -72,12 +72,12 @@ export default function TvView() {
         <div className="lg:w-1/2 flex flex-col bg-gradient-to-br from-blue-900/80 to-indigo-900/80 backdrop-blur-2xl rounded-[3rem] border border-blue-400/30 shadow-[0_0_50px_rgba(37,99,235,0.2)] p-6 overflow-hidden">
           
           {/* 1. Logo (25%) */}
-          <div className="h-[25%] flex justify-center items-center shrink-0 mb-1">
-            <img src="/assets/title_k71.png" alt="TCKT" className="w-full max-w-[85%] h-full object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
+          <div className="h-[15%] flex justify-center items-center shrink-0 mb-0">
+            <img src="/assets/title_k71.png" alt="TCKT" className="w-full max-w-[95%] h-[120%] object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] scale-110" />
           </div>
           
           {/* 2. Moving (25%) */}
-          <div className="h-[25%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-blue-500/30 pt-2 shrink-0">
+          <div className="h-[35%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-blue-500/30 pt-2 shrink-0">
             <h3 className="text-lg font-bold text-blue-300 uppercase tracking-widest shrink-0">Đang Gọi:</h3>
             {tcktMoving.length === 0 ? (
               <p className="text-blue-300/50 italic text-center py-2">Chưa gọi thêm</p>
@@ -109,12 +109,12 @@ export default function TvView() {
         <div className="lg:w-1/2 flex flex-col bg-gradient-to-br from-emerald-900/80 to-teal-900/80 backdrop-blur-2xl rounded-[3rem] border border-emerald-400/30 shadow-[0_0_50px_rgba(16,185,129,0.2)] p-6 overflow-hidden">
           
           {/* 1. Logo (25%) */}
-          <div className="h-[25%] flex justify-center items-center shrink-0 mb-1">
-            <img src="/assets/title_bcs.png" alt="BCS" className="w-full max-w-[85%] h-full object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
+          <div className="h-[15%] flex justify-center items-center shrink-0 mb-0">
+            <img src="/assets/title_bcs.png" alt="BCS" className="w-full max-w-[95%] h-[120%] object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] scale-110" />
           </div>
           
           {/* 2. Moving (25%) */}
-          <div className="h-[25%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-emerald-500/30 pt-2 shrink-0">
+          <div className="h-[35%] flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 border-t border-emerald-500/30 pt-2 shrink-0">
             <h3 className="text-lg font-bold text-emerald-300 uppercase tracking-widest shrink-0">Đang Gọi:</h3>
             {bcsMoving.length === 0 ? (
               <p className="text-emerald-300/50 italic text-center py-2">Chưa gọi thêm</p>
