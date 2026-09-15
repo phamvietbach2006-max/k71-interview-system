@@ -111,10 +111,10 @@ export default function Login() {
       </div>
 
       {/* Dual Logos */}
-      <div className="z-10 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-8 mt-12 md:mt-0 mb-8 md:mb-12 w-full px-4">
-        <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-[16rem] md:w-[24rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up" />
-        <span className="text-4xl md:text-7xl font-black text-white/70 drop-shadow-md animate-fade-in">&amp;</span>
-        <img src="/assets/title_bcs.png" alt="Ban Cán sự năm nhất" className="w-[16rem] md:w-[24rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up animation-delay-100" />
+      <div className="z-10 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mt-12 md:mt-0 mb-8 md:mb-12 w-full px-4">
+        <img src="/assets/title_k71.png" alt="Tuyển Thành Viên Ban Tổ Chức - Kiểm Tra" className="w-[85%] max-w-[22rem] md:max-w-none md:w-[24rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up" />
+        <span className="text-6xl md:text-7xl font-black text-white/70 drop-shadow-md animate-fade-in">&amp;</span>
+        <img src="/assets/title_bcs.png" alt="Ban Cán sự năm nhất" className="w-[85%] max-w-[22rem] md:max-w-none md:w-[24rem] lg:w-[32rem] drop-shadow-2xl transform animate-fade-in-up animation-delay-100" />
       </div>
 
       <div className="bg-white/90 backdrop-blur-2xl p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.1)] w-full max-w-md border border-white z-10 animate-fade-in-up mb-12">
