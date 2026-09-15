@@ -508,7 +508,8 @@ app.post('/api/staff/switch-role', async (req, res) => {
       if (roomNumber) user.roomNumber = roomNumber;
     }
     await user.save();
-    res.json({ success: true, role: user.role, tableNumber: user.tableNumber, roomNumber: user.roomNumber });
+    const newToken = jwt.sign({ id: user._id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '12h' });
+    res.json({ success: true, role: user.role, tableNumber: user.tableNumber, roomNumber: user.roomNumber, token: newToken });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

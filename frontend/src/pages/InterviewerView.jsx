@@ -125,6 +125,7 @@ export default function InterviewerView() {
     if (data.success) {
       const stored = JSON.parse(localStorage.getItem('user'));
       stored.role = 'admin';
+      if (data.token) stored.token = data.token;
       localStorage.setItem('user', JSON.stringify(stored));
       navigate('/admin');
     }

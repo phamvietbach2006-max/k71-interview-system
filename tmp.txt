@@ -1,0 +1,18 @@
+  const performSwitchRole = async (rNum, tNum) => {
+    if (!tNum || !rNum) return alert('Vui lòng nhập số phòng và số bàn');
+    
+    const res = await fetch('/api/staff/switch-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user.username, targetRole: 'interviewer', roomNumber: rNum, tableNumber: tNum })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const stored = JSON.parse(localStorage.getItem('user'));
+      stored.role = 'interviewer';
+      stored.roomNumber = rNum;
+      stored.tableNumber = tNum;
+      localStorage.setItem('user', JSON.stringify(stored));
+      navigate('/interviewer');
+    }
+  };

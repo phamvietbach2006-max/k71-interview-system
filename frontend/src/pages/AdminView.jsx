@@ -51,6 +51,7 @@ export default function AdminView() {
       stored.role = 'interviewer';
       stored.roomNumber = rNum;
       stored.tableNumber = tNum;
+      if (data.token) stored.token = data.token;
       localStorage.setItem('user', JSON.stringify(stored));
       navigate('/interviewer');
     }
