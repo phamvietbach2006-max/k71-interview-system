@@ -37,23 +37,38 @@ export default function AdminView() {
     if (activeTab === 'users' && isSuperAdmin) fetchUsers();
   }, [activeTab]);
 
-  const switchRole = async (e) => {
-    e.preventDefault();
-    if (!tableNumber || !roomNumber) return alert('Vui lòng nhập số phòng và số bàn');
+  const performSwitchRole = async (rNum, tNum) => {
+    if (!tNum || !rNum) return alert('Vui lòng nhập số phòng và số bàn');
     
     const res = await fetch('/api/staff/switch-role', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: user.username, targetRole: 'interviewer', roomNumber, tableNumber })
+      body: JSON.stringify({ username: user.username, targetRole: 'interviewer', roomNumber: rNum, tableNumber: tNum })
     });
     const data = await res.json();
     if (data.success) {
       const stored = JSON.parse(localStorage.getItem('user'));
       stored.role = 'interviewer';
-      stored.roomNumber = roomNumber;
-      stored.tableNumber = tableNumber;
+      stored.roomNumber = rNum;
+      stored.tableNumber = tNum;
       localStorage.setItem('user', JSON.stringify(stored));
       navigate('/interviewer');
+    }
+  };
+
+  const switchRole = (e) => {
+    e.preventDefault();
+    performSwitchRole(roomNumber, tableNumber);
+  };
+
+  const handleSwitchToInterviewer = () => {
+    const stored = JSON.parse(localStorage.getItem('user')) || {};
+    if (stored.tableNumber && stored.roomNumber) {
+      performSwitchRole(stored.roomNumber, stored.tableNumber);
+    } else {
+      setRoomNumber(localStorage.getItem('lastRoomNumber') || '');
+      setTableNumber(localStorage.getItem('lastTableNumber') || '');
+      setShowTablePrompt(true);
     }
   };
 
@@ -247,7 +262,7 @@ export default function AdminView() {
                   <Trash2 size={16} /> Làm sạch dữ liệu
                 </button>
                 <button 
-                  onClick={() => setShowTablePrompt(true)}
+                  onClick={handleSwitchToInterviewer}
                   className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
                 >
                   <RefreshCw size={16} /> Chuyển sang Người PV

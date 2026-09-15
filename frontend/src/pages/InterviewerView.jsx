@@ -76,6 +76,8 @@ export default function InterviewerView() {
         body: JSON.stringify({ username: user.username })
       });
       if (res.ok) {
+        localStorage.setItem('lastRoomNumber', user.roomNumber || '');
+        localStorage.setItem('lastTableNumber', user.tableNumber || '');
         localStorage.removeItem('user');
         window.location.href = '/';
       }
