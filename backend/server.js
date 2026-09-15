@@ -594,6 +594,28 @@ app.delete('/api/users/:username', async (req, res) => {
 const buildPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(buildPath));
 
+app.post('/api/candidates', async (req, res) => {
+  try {
+    const { interviewCode, fullName, department } = req.body;
+    if (!interviewCode) return res.status(400).json({ error: "Thiếu Mã Ứng Viên" });
+    
+    let candidate = await Candidate.findOne({ interviewCode });
+    if (candidate) return res.status(400).json({ error: "Mã Ứng Viên đã tồn tại" });
+    
+    candidate = new Candidate({
+      interviewCode,
+      department: department || "TCKT",
+      status: "active",
+      applicationData: { "Họ và tên": fullName || "" }
+    });
+    
+    await candidate.save();
+    res.json({ success: true, candidate });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get(/(.*)/, (req, res) => {
   res.sendFile(path.join(buildPath, 'index.html'));
 });

@@ -16,6 +16,7 @@ export default function AdminView() {
   const [usersList, setUsersList] = useState([]);
   const [activeTab, setActiveTab] = useState('board'); // board, evaluations, users
   const [newUser, setNewUser] = useState({ username: '', fullName: '', department: 'TCKT', roles: ['interviewer'] });
+  const [newCandidate, setNewCandidate] = useState({ interviewCode: '', fullName: '', department: 'TCKT' });
   const [showTablePrompt, setShowTablePrompt] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
@@ -104,6 +105,24 @@ export default function AdminView() {
     const res = await fetch('/api/candidates');
     const data = await res.json();
     setCandidates(data);
+  };
+
+  const handleAddCandidate = async (e) => {
+    e.preventDefault();
+    if (!newCandidate.interviewCode || !newCandidate.fullName) return alert('Vui lòng điền đủ Mã Ứng Viên và Họ Tên');
+    const res = await fetch('/api/candidates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newCandidate)
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Thêm ứng viên thành công!');
+      setNewCandidate({ interviewCode: '', fullName: '', department: 'TCKT' });
+      fetchCandidates();
+    } else {
+      alert(data.error || 'Có lỗi xảy ra');
+    }
   };
 
   const handleAddUser = async () => {
@@ -528,6 +547,29 @@ export default function AdminView() {
             <div className="bg-white/80 backdrop-blur-md rounded-[2rem] shadow-xl border border-white/50 p-8 animate-fade-in-up">
               <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-8 border-b border-slate-100 pb-6">Danh Sách Ứng Viên</h2>
               
+              {/* Add New Candidate */}
+              <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl mb-8">
+                <h3 className="text-lg font-bold text-slate-700 mb-4">Thêm ứng viên bổ sung</h3>
+                <form onSubmit={handleAddCandidate} className="flex flex-wrap gap-4 items-end">
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm font-bold text-slate-600 mb-1">Mã Ứng Viên (MSSV)</label>
+                    <input type="text" value={newCandidate.interviewCode} onChange={e => setNewCandidate({...newCandidate, interviewCode: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 bg-white" placeholder="vd: 202513118" />
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm font-bold text-slate-600 mb-1">Họ và Tên</label>
+                    <input type="text" value={newCandidate.fullName} onChange={e => setNewCandidate({...newCandidate, fullName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 bg-white" placeholder="Nguyễn Văn A" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-600 mb-1">Ban</label>
+                    <select value={newCandidate.department} onChange={e => setNewCandidate({...newCandidate, department: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 bg-white">
+                      <option value="TCKT">TCKT</option>
+                      <option value="BCS">BCS</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors h-[42px]">Thêm</button>
+                </form>
+              </div>
+
               <div className="overflow-x-auto custom-scrollbar pb-4">
                 <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
