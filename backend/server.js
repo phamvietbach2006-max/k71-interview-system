@@ -101,11 +101,24 @@ const assignCandidates = async () => {
 
 setInterval(assignCandidates, 3000); // Check every 3 seconds
 
+const onlineSockets = new Map();
+
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
+  let socketUsername = null;
+
+  socket.on('user_online', (username) => {
+    socketUsername = username;
+    onlineSockets.set(socket.id, username);
+    io.emit('online_users', Array.from(new Set(onlineSockets.values())));
+  });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    if (socketUsername) {
+      onlineSockets.delete(socket.id);
+      io.emit('online_users', Array.from(new Set(onlineSockets.values())));
+    }
   });
 
   // Candidate checks in
@@ -313,10 +326,21 @@ app.post('/api/admin/clean-data', async (req, res) => {
     await User.updateMany({ role: 'interviewer' }, {
       $set: { status: 'active' }
     });
+    await Message.deleteMany({});
     io.emit('board_update');
+    io.emit('chat_history', []);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get('/api/candidates', async (req, res) => {
+  try {
+    const cands = await Candidate.find().sort({ checkInTime: -1 }).lean();
+    res.json(cands);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

@@ -8,6 +8,7 @@ export default function ChatWidget({ currentUser }) {
   const [messages, setMessages] = useState([]);
   const [inputMsg, setInputMsg] = useState('');
   const [staff, setStaff] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -19,6 +20,15 @@ export default function ChatWidget({ currentUser }) {
     const interval = setInterval(fetchStaff, 5000); // Polling for staff status
 
     socketRef.current = io('/');
+    
+    if (currentUser) {
+      socketRef.current.emit('user_online', currentUser.username);
+    }
+    
+    socketRef.current.on('online_users', (users) => {
+      setOnlineUsers(users);
+    });
+
     socketRef.current.on('new_message', (msg) => {
       setMessages(prev => [...prev, msg]);
     });
@@ -119,10 +129,13 @@ export default function ChatWidget({ currentUser }) {
 
   if (!currentUser) return null;
 
-  // Group staff
-  const admins = staff.filter(s => s.role === 'admin' && ADMIN_NAMES.includes(s.fullName));
-  const receptionists = staff.filter(s => s.role === 'admin' && !ADMIN_NAMES.includes(s.fullName));
-  const interviewers = staff.filter(s => s.role === 'interviewer');
+  // Sort staff and extract unread ones
+  const staffWithUnread = staff.filter(s => unreadMessages.some(m => m.sender === s.username && m.receiver === currentUser.username));
+  const otherStaff = staff.filter(s => !staffWithUnread.includes(s));
+
+  const admins = otherStaff.filter(s => s.role === 'admin' && ADMIN_NAMES.includes(s.fullName));
+  const receptionists = otherStaff.filter(s => s.role === 'admin' && !ADMIN_NAMES.includes(s.fullName));
+  const interviewers = otherStaff.filter(s => s.role === 'interviewer');
 
   const renderStaffList = (title, list) => {
     if (list.length === 0) return null;
@@ -132,7 +145,7 @@ export default function ChatWidget({ currentUser }) {
           {title}
         </div>
         {list.map(s => {
-          const isOnline = s.status === 'active' || s.status === 'interviewing';
+          const isOnline = onlineUsers.includes(s.username);
           const displayName = s.fullName || s.username;
           
           // Check if this specific chat has unread messages
@@ -151,8 +164,11 @@ export default function ChatWidget({ currentUser }) {
                 </span>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                {hasUnreadFromThisUser && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
-                {isOnline && <Circle size={8} fill="currentColor" className="text-green-500" />}
+                {hasUnreadFromThisUser ? (
+                  <Circle size={8} fill="currentColor" className="text-red-500" />
+                ) : (
+                  isOnline && <Circle size={8} fill="currentColor" className="text-green-500" />
+                )}
               </div>
             </div>
           )
@@ -206,6 +222,7 @@ export default function ChatWidget({ currentUser }) {
               </div>
               
               <div className="py-2">
+                {renderStaffList('Tin nhắn mới', staffWithUnread)}
                 {renderStaffList('Ban Admin', admins)}
                 {renderStaffList('Đội Phỏng Vấn', interviewers)}
                 {renderStaffList('Đội Lễ Tân', receptionists)}

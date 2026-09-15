@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2, List } from 'lucide-react';
 import io from 'socket.io-client';
 import Board from './Board';
 import ChatWidget from '../components/ChatWidget';
@@ -12,6 +12,7 @@ export default function AdminView() {
   const socketRef = useRef(null);
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [evaluations, setEvaluations] = useState([]);
+  const [candidates, setCandidates] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [activeTab, setActiveTab] = useState('board'); // board, evaluations, users
   const [newUser, setNewUser] = useState({ username: '', fullName: '', department: 'TCKT', roles: ['interviewer'] });
@@ -35,6 +36,7 @@ export default function AdminView() {
   useEffect(() => {
     if (activeTab === 'evaluations') fetchEvaluations();
     if (activeTab === 'users' && isSuperAdmin) fetchUsers();
+    if (activeTab === 'candidates' && isSuperAdmin) fetchCandidates();
   }, [activeTab]);
 
   const performSwitchRole = async (rNum, tNum) => {
@@ -93,6 +95,12 @@ export default function AdminView() {
     const res = await fetch('/api/users');
     const data = await res.json();
     setUsersList(data);
+  };
+
+  const fetchCandidates = async () => {
+    const res = await fetch('/api/candidates');
+    const data = await res.json();
+    setCandidates(data);
   };
 
   const handleAddUser = async () => {
@@ -226,12 +234,20 @@ export default function AdminView() {
                 <FileText size={18} /> Dữ Liệu Đánh Giá
               </button>
               {isSuperAdmin && (
-                <button 
-                  onClick={() => setActiveTab('users')}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-                >
-                  <ShieldCheck size={18} /> Quản Lý Nhân Sự
-                </button>
+                <>
+                  <button 
+                    onClick={() => setActiveTab('users')}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'users' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                  >
+                    <ShieldCheck size={18} /> Quản Lý Nhân Sự
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('candidates')}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === 'candidates' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+                  >
+                    <List size={18} /> Danh Sách Ứng Viên
+                  </button>
+                </>
               )}
             </nav>
 
@@ -478,6 +494,42 @@ export default function AdminView() {
                         <td className="p-4 text-center">
                           <button onClick={() => handleDeleteUser(u.username)} className="text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors text-sm">Xóa</button>
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {activeTab === 'candidates' && isSuperAdmin && (
+            <div className="bg-white/80 backdrop-blur-md rounded-[2rem] shadow-xl border border-white/50 p-8 animate-fade-in-up">
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-8 border-b border-slate-100 pb-6">Danh Sách Ứng Viên</h2>
+              
+              <div className="overflow-x-auto custom-scrollbar pb-4">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                  <thead>
+                    <tr className="bg-slate-50/80 text-slate-700 border-b-2 border-slate-200">
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Mã Ứng Viên</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Ban</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Trạng Thái</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Phòng</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Bàn</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {candidates.map(c => (
+                      <tr key={c._id} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
+                        <td className="p-4 font-bold text-slate-800">{c.interviewCode}</td>
+                        <td className="p-4 text-slate-600 font-medium">{c.department || "TCKT"}</td>
+                        <td className="p-4 font-bold text-slate-600">{
+                          c.status === 'active' ? "Chưa điểm danh" :
+                          c.status === 'waiting' ? "Đang chờ" :
+                          c.status === 'interviewing' ? "Đang phỏng vấn" :
+                          c.status === 'moving' ? "Đang di chuyển" :
+                          c.status === 'completed' ? "Hoàn thành" : c.status
+                        }</td>
+                        <td className="p-4 font-bold text-slate-600">{c.assignedRoom || "-"}</td>
+                        <td className="p-4 font-bold text-slate-600">{c.assignedTable || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
