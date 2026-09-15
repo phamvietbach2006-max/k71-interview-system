@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { Coffee, User, CheckCircle, Save, MessageSquare, UserCheck, Loader2, RefreshCw, Hand, X, XCircle } from 'lucide-react';
+import { Coffee, User, CheckCircle, Save, MessageSquare, UserCheck, Loader2, RefreshCw, Hand, X, XCircle, LogOut } from 'lucide-react';
 import ChatWidget from '../components/ChatWidget';
 
 export default function InterviewerView() {
@@ -54,6 +54,23 @@ export default function InterviewerView() {
       body: JSON.stringify({ username: user.username, status: newStatus })
     });
     setIsBreak(!isBreak);
+  };
+
+  const handleLeaveTable = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn rời bàn phỏng vấn? Khi đăng nhập lại bạn sẽ phải chọn lại phòng và bàn.")) return;
+    try {
+      const res = await fetch('/api/staff/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user.username })
+      });
+      if (res.ok) {
+        localStorage.removeItem('user');
+        window.location.href = '/';
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const toggleAutoAssign = async () => {
@@ -213,10 +230,18 @@ export default function InterviewerView() {
 
               <button 
                 onClick={handleToggleBreak}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-md ${isBreak ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-md ${isBreak ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500' : 'bg-yellow-500 text-white hover:bg-yellow-600'}`}
               >
                 <Coffee size={20} />
-                {isBreak ? 'Mở lại Bàn' : 'Tạm Nghỉ'}
+                {isBreak ? 'Quay lại Bàn' : 'Tạm Nghỉ'}
+              </button>
+
+              <button 
+                onClick={handleLeaveTable}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-md bg-red-600 text-white hover:bg-red-700"
+              >
+                <LogOut size={20} />
+                Rời Bàn
               </button>
             </div>
           </div>

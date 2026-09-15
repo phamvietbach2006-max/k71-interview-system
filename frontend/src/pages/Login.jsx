@@ -32,8 +32,23 @@ export default function Login() {
           setTempUser(data);
           setStep(1.75); // Confirmation screen
         } else if (data.role === 'interviewer') {
-          setTempUser(data);
-          setStep(2); // Ask for Table & Room Number
+          if (data.tableNumber && data.roomNumber) {
+            localStorage.setItem('user', JSON.stringify({ 
+              username: data.username, 
+              fullName: data.fullName,
+              role: data.role, 
+              department: data.department,
+              tableNumber: data.tableNumber,
+              roomNumber: data.roomNumber,
+              autoAssign: data.autoAssign,
+              roles: data.roles,
+              token: data.token 
+            }));
+            navigate('/interviewer');
+          } else {
+            setTempUser(data);
+            setStep(2); // Ask for Table & Room Number
+          }
         } else {
           // Admin / Receptionist
           localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: data.role, department: data.department, roles: data.roles, token: data.token }));

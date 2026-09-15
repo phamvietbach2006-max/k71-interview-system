@@ -260,6 +260,23 @@ app.post('/api/evaluation', async (req, res) => {
   }
 });
 
+app.post('/api/staff/leave', async (req, res) => {
+  const { username } = req.body;
+  try {
+    const user = await User.findOne({ username });
+    if (user) {
+      user.tableNumber = null;
+      user.roomNumber = null;
+      user.status = 'active';
+      await user.save();
+      io.emit('staff_update');
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/staff/status', async (req, res) => {
   const { username, status } = req.body; // status: active or break
   try {
