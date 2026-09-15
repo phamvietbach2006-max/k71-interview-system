@@ -71,7 +71,7 @@ export default function TvView() {
         {/* Left Half: TCKT */}
         <div className="lg:w-1/2 flex flex-col gap-6 bg-gradient-to-br from-blue-900/80 to-indigo-900/80 backdrop-blur-2xl rounded-[3rem] border border-blue-400/30 shadow-[0_0_50px_rgba(37,99,235,0.2)] p-8">
           <div className="flex justify-center border-b border-blue-500/30 pb-4 mb-2">
-            <img src="/assets/title_k71.png" alt="TCKT" className="h-16 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
+            <img src="/assets/title_k71.png" alt="TCKT" className="w-3/4 max-w-2xl max-h-40 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
           </div>
           
           {/* Moving */}
@@ -106,7 +106,7 @@ export default function TvView() {
         {/* Right Half: BCS */}
         <div className="lg:w-1/2 flex flex-col gap-6 bg-gradient-to-br from-emerald-900/80 to-teal-900/80 backdrop-blur-2xl rounded-[3rem] border border-emerald-400/30 shadow-[0_0_50px_rgba(16,185,129,0.2)] p-8">
           <div className="flex justify-center border-b border-emerald-500/30 pb-4 mb-2">
-            <img src="/assets/title_bcs.png" alt="BCS" className="h-16 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
+            <img src="/assets/title_bcs.png" alt="BCS" className="w-3/4 max-w-2xl max-h-40 object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" />
           </div>
           
           {/* Moving */}
