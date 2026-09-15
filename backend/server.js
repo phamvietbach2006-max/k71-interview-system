@@ -539,18 +539,6 @@ app.post('/api/staff/switch-role', async (req, res) => {
   }
 });
 
-// Serve static frontend files
-const buildPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(buildPath));
-
-app.get(/(.*)/, (req, res) => {
-  res.sendFile(path.join(buildPath, 'index.html'));
-});
-
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 app.get('/api/users', async (req, res) => {
   const users = await User.find().lean();
@@ -601,4 +589,16 @@ app.delete('/api/users/:username', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+// Serve static frontend files
+const buildPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(buildPath));
+
+app.get(/(.*)/, (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'));
+});
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

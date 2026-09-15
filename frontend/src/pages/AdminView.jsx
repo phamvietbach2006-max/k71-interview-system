@@ -34,7 +34,10 @@ export default function AdminView() {
   }, [viewDepartment]);
 
   useEffect(() => {
-    if (activeTab === 'evaluations') fetchEvaluations();
+    if (activeTab === 'evaluations') {
+      fetchEvaluations();
+      if (isSuperAdmin) fetchCandidates();
+    }
     if (activeTab === 'users' && isSuperAdmin) fetchUsers();
     if (activeTab === 'candidates' && isSuperAdmin) fetchCandidates();
   }, [activeTab]);
@@ -420,6 +423,26 @@ export default function AdminView() {
                   </tbody>
                 </table>
               </div>
+              
+              <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl shadow-sm text-center">
+                  <p className="text-sm font-bold text-blue-600 mb-1 uppercase tracking-wider">Đã phỏng vấn</p>
+                  <p className="text-3xl font-black text-blue-800">{evaluations.length}</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl shadow-sm text-center">
+                  <p className="text-sm font-bold text-slate-600 mb-1 uppercase tracking-wider">Còn lại</p>
+                  <p className="text-3xl font-black text-slate-800">{candidates.length > 0 ? candidates.filter(c => c.status !== 'completed').length : (boardData.waiting.length + boardData.moving.length + boardData.interviewing.length)}</p>
+                </div>
+                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl shadow-sm text-center">
+                  <p className="text-sm font-bold text-emerald-600 mb-1 uppercase tracking-wider">Đạt</p>
+                  <p className="text-3xl font-black text-emerald-800">{evaluations.filter(e => e.result === 'Đạt' || e.result === 'Đạt').length}</p>
+                </div>
+                <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl shadow-sm text-center">
+                  <p className="text-sm font-bold text-amber-600 mb-1 uppercase tracking-wider">Cân nhắc thêm</p>
+                  <p className="text-3xl font-black text-amber-800">{evaluations.filter(e => e.result === 'Cân nhắc thêm' || e.result === 'Cân nhắc').length}</p>
+                </div>
+              </div>
+              
             </div>
           )}
 
@@ -509,7 +532,8 @@ export default function AdminView() {
                 <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                     <tr className="bg-slate-50/80 text-slate-700 border-b-2 border-slate-200">
-                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Mã Ứng Viên</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Họ và tên</th>
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Mã Ứng Viên</th>
                       <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Ban</th>
                       <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Trạng Thái</th>
                       <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Phòng</th>
@@ -519,6 +543,7 @@ export default function AdminView() {
                   <tbody>
                     {candidates.map(c => (
                       <tr key={c._id} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
+                        <td className="p-4 font-bold text-slate-800">{c.applicationData?.['Họ và tên'] || c.applicationData?.['Họ tên'] || '-'}</td>
                         <td className="p-4 font-bold text-slate-800">{c.interviewCode}</td>
                         <td className="p-4 text-slate-600 font-medium">{c.department || "TCKT"}</td>
                         <td className="p-4 font-bold text-slate-600">{
