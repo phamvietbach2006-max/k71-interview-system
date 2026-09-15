@@ -26,24 +26,35 @@ export default function InterviewerView() {
     if (stored && stored.role === 'interviewer') {
       setUser(stored);
       setAutoAssign(stored.autoAssign === true);
-      fetchCandidate(stored.tableNumber);
+      fetchBoard();
     }
     
     socketRef.current = io('/');
     socketRef.current.on('board_update', () => {
-      if (stored) fetchCandidate(stored.tableNumber);
+      if (stored) fetchBoard();
     });
 
     return () => socketRef.current.disconnect();
   }, []);
 
-  const fetchCandidate = async (tableNum) => {
-    const res = await fetch('/api/board');
-    const data = await res.json();
-    setBoardData(data);
-    const all = [...data.waiting, ...data.interviewing];
-    const candidate = all.find(c => c.assignedTable === String(tableNum) && (c.status === 'moving' || c.status === 'interviewing'));
-    setCurrentCandidate(candidate || null);
+  const fetchBoard = async () => {
+    try {
+      const res = await fetch('/api/board');
+      const data = await res.json();
+      setBoardData(data);
+      const all = [...(data.moving || []), ...(data.waiting || []), ...(data.interviewing || [])];
+      const stored = JSON.parse(localStorage.getItem('user'));
+      const tableNum = user?.tableNumber || stored?.tableNumber;
+      const roomNum = user?.roomNumber || stored?.roomNumber;
+      const candidate = all.find(c => 
+        c.assignedTable === String(tableNum) && 
+        c.assignedRoom === String(roomNum) &&
+        (c.status === 'moving' || c.status === 'interviewing')
+      );
+      setCurrentCandidate(candidate || null);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleToggleBreak = async () => {
