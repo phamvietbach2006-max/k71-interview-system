@@ -234,6 +234,66 @@ export default function AdminView() {
 
   if (!user || user.role !== 'admin') return <div className="min-h-screen flex items-center justify-center">Truy cập bị từ chối.</div>;
 
+  const renderUsersTable = (filteredUsers, title) => (
+    <div className="mb-8">
+      <h3 className="text-xl font-bold text-slate-800 mb-4">{title}</h3>
+      <div className="overflow-x-auto custom-scrollbar pb-4 bg-white/50 rounded-xl border border-slate-100 shadow-sm">
+        <table className="w-full text-left border-collapse min-w-[800px]">
+          <thead>
+            <tr className="bg-slate-100/80 text-slate-700 border-b-2 border-slate-200">
+              <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Tài Khoản</th>
+              <th className="p-4 font-black tracking-wider uppercase text-sm w-[25%]">Họ và Tên</th>
+              <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Ban</th>
+              <th className="p-4 font-black tracking-wider uppercase text-sm w-auto">Phân Quyền</th>
+              <th className="p-4 font-black tracking-wider uppercase text-sm w-[10%] text-center">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map(u => (
+              <tr key={u.username} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
+                <td className="p-4 font-bold text-slate-800">{u.username}</td>
+                <td className="p-4 text-slate-600 font-medium">{u.fullName || ""}</td>
+                <td className="p-4">
+                  <select 
+                    value={u.department || "TCKT"}
+                    onChange={(e) => fetch("/api/users/update", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ username: u.username, department: e.target.value }) }).then(fetchUsers)}
+                    className="bg-slate-100 border border-slate-200 text-slate-700 rounded-lg px-3 py-1 text-sm font-bold focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="TCKT">TCKT</option>
+                    <option value="BCS">BCS</option>
+                  </select>
+                </td>
+                <td className="p-4">
+                  <div className="flex gap-4">
+                    {["admin", "interviewer", "receptionist"].map(role => (
+                      <label key={role} className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={u.roles?.includes(role)} 
+                          onChange={() => updateUserRole(u.username, u.roles, role)}
+                          className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-bold text-slate-600 uppercase tracking-wider">{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </td>
+                <td className="p-4 text-center">
+                  <button onClick={() => handleDeleteUser(u.username)} className="text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors text-sm">Xóa</button>
+                </td>
+              </tr>
+            ))}
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan="5" className="p-8 text-center text-slate-400 italic">Không có dữ liệu</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen relative overflow-hidden p-4 md:p-8 font-sans flex flex-col items-center">
       <MacBackground />
@@ -493,53 +553,8 @@ export default function AdminView() {
               </div>
 
               <div className="overflow-x-auto custom-scrollbar pb-4">
-                <table className="w-full text-left border-collapse min-w-[800px]">
-                  <thead>
-                    <tr className="bg-slate-50/80 text-slate-700 border-b-2 border-slate-200">
-                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Tài Khoản</th>
-                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[25%]">Họ và Tên</th>
-                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Ban</th>
-                      <th className="p-4 font-black tracking-wider uppercase text-sm w-auto">Phân Quyền</th>
-                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[10%] text-center">Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {usersList.map(u => (
-                      <tr key={u.username} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
-                        <td className="p-4 font-bold text-slate-800">{u.username}</td>
-                        <td className="p-4 text-slate-600 font-medium">{u.fullName || ""}</td>
-                        <td className="p-4">
-                          <select 
-                            value={u.department || "TCKT"}
-                            onChange={(e) => fetch("/api/users/update", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ username: u.username, department: e.target.value }) }).then(fetchUsers)}
-                            className="bg-slate-100 border border-slate-200 text-slate-700 rounded-lg px-3 py-1 text-sm font-bold focus:outline-none focus:border-blue-500"
-                          >
-                            <option value="TCKT">TCKT</option>
-                            <option value="BCS">BCS</option>
-                          </select>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex gap-4">
-                            {["admin", "interviewer", "receptionist"].map(role => (
-                              <label key={role} className="flex items-center gap-2 cursor-pointer">
-                                <input 
-                                  type="checkbox" 
-                                  checked={u.roles?.includes(role)} 
-                                  onChange={() => updateUserRole(u.username, u.roles, role)}
-                                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-                                />
-                                <span className="text-sm font-bold text-slate-600 uppercase tracking-wider">{role}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="p-4 text-center">
-                          <button onClick={() => handleDeleteUser(u.username)} className="text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors text-sm">Xóa</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {renderUsersTable(usersList.filter(u => !u.department || u.department === 'TCKT'), 'Danh sách nhân sự: Ban TCKT')}
+                {renderUsersTable(usersList.filter(u => u.department === 'BCS'), 'Danh sách nhân sự: Ban Cán sự Năm nhất')}
               </div>
             </div>
           )}
