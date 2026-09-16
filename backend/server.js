@@ -32,7 +32,7 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded;
     
     // For sensitive Admin routes (optional, if we want strict roles)
-    if (req.path.startsWith('/admin') && req.user.role !== 'admin') {
+    if (req.path.startsWith('/admin') && req.user.role !== 'admin' && !(req.user.roles && req.user.roles.includes('admin'))) {
        return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
     }
     
@@ -201,7 +201,7 @@ app.post('/api/login', async (req, res) => {
         io.emit('staff_update');
       }
       
-      const token = jwt.sign({ id: user._id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '12h' });
+      const token = jwt.sign({ id: user._id, role: user.role, roles: user.roles, username: user.username }, JWT_SECRET, { expiresIn: '12h' });
       return res.json({ 
         success: true, 
         role: user.role, 
@@ -521,8 +521,9 @@ app.post('/api/staff/switch-role', async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     
-    // Safety check, although frontend restricts it too
-    if (!['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'].includes(user.fullName)) {
+    // Safety check using roles
+    const hasAdmin = user.role === 'admin' || (user.roles && user.roles.includes('admin'));
+    if (!hasAdmin) {
       return res.status(403).json({ success: false, message: 'Not allowed to switch roles' });
     }
 
@@ -532,7 +533,7 @@ app.post('/api/staff/switch-role', async (req, res) => {
       if (roomNumber) user.roomNumber = roomNumber;
     }
     await user.save();
-    const newToken = jwt.sign({ id: user._id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '12h' });
+    const newToken = jwt.sign({ id: user._id, role: user.role, roles: user.roles, username: user.username }, JWT_SECRET, { expiresIn: '12h' });
     res.json({ success: true, role: user.role, tableNumber: user.tableNumber, roomNumber: user.roomNumber, token: newToken });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -549,7 +550,12 @@ app.post('/api/users/update', async (req, res) => {
   const { username, roles, department } = req.body;
   const u = await User.findOne({ username });
   if (u) {
-    if (roles) u.roles = roles;
+    if (roles) {
+      u.roles = roles;
+      if (roles.includes('admin')) u.role = 'admin';
+      else if (roles.includes('receptionist')) u.role = 'receptionist';
+      else if (roles.includes('interviewer')) u.role = 'interviewer';
+    }
     if (department) u.department = department;
     await u.save();
   }
