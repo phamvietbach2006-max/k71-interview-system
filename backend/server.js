@@ -18,7 +18,7 @@ app.use(express.json());
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'tckt_super_secret_key';
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   // Allow public/read-only routes without token
   if (req.path === '/login' || req.path === '/tv-board' || req.path === '/board') return next();
   
@@ -31,9 +31,18 @@ const authMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     
-    // For sensitive Admin routes (optional, if we want strict roles)
-    if (req.path.startsWith('/admin') && req.user.role !== 'admin' && !(req.user.roles && req.user.roles.includes('admin'))) {
-       return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
+    // For sensitive Admin routes, check DB for live roles and hardcoded names
+    if (req.path.startsWith('/admin')) {
+       const dbUser = await User.findById(req.user.id);
+       const isAdmin = dbUser && (
+         dbUser.role === 'admin' || 
+         (dbUser.roles && dbUser.roles.includes('admin')) || 
+         dbUser.fullName === 'Phạm Việt Bách' || 
+         dbUser.username === 'Phạm Việt Bách'
+       );
+       if (!isAdmin) {
+         return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
+       }
     }
     
     next();
@@ -396,8 +405,13 @@ app.post('/api/messages', async (req, res) => {
     // Group chat requires admin privileges
     if (receiver === 'group') {
       const user = await User.findOne({ username: sender });
-      const adminNames = ['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'];
-      if (!user || user.role !== 'admin' || !adminNames.includes(user.fullName)) {
+      const isAdmin = user && (
+        user.role === 'admin' || 
+        (user.roles && user.roles.includes('admin')) || 
+        user.fullName === 'Phạm Việt Bách' || 
+        user.username === 'Phạm Việt Bách'
+      );
+      if (!isAdmin) {
         return res.status(403).json({ error: 'Chỉ Admin mới có quyền gửi thông báo chung!' });
       }
     }

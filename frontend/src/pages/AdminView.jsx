@@ -20,8 +20,8 @@ export default function AdminView() {
   const [showTablePrompt, setShowTablePrompt] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
-  const user = JSON.parse(localStorage.getItem('user'));
-  const isSuperAdmin = user.fullName === 'Phạm Việt Bách' || user.username === 'Phạm Việt Bách';
+  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const isSuperAdmin = user.role === 'admin' || (user.roles && user.roles.includes('admin')) || user.fullName === 'Phạm Việt Bách' || user.username === 'Phạm Việt Bách';
   const [viewDepartment, setViewDepartment] = useState(user.department || 'TCKT');
 
   useEffect(() => {
@@ -232,7 +232,7 @@ export default function AdminView() {
     document.body.removeChild(link);
   };
 
-  if (!user || user.role !== 'admin') return <div className="min-h-screen flex items-center justify-center">Truy cập bị từ chối.</div>;
+  if (!user.username || !isSuperAdmin) return <div className="min-h-screen flex items-center justify-center">Truy cập bị từ chối.</div>;
 
   const renderUsersTable = (filteredUsers, title) => (
     <div className="mb-8">
