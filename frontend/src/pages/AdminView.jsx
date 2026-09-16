@@ -553,8 +553,8 @@ export default function AdminView() {
               </div>
 
               <div className="overflow-x-auto custom-scrollbar pb-4">
-                {renderUsersTable(usersList.filter(u => !u.department || u.department === 'TCKT'), 'Danh sách nhân sự: Ban TCKT')}
-                {renderUsersTable(usersList.filter(u => u.department === 'BCS'), 'Danh sách nhân sự: Ban Cán sự Năm nhất')}
+                {viewDepartment === 'TCKT' && renderUsersTable(usersList.filter(u => !u.department || u.department === 'TCKT'), 'Danh sách nhân sự: Ban TCKT')}
+                {viewDepartment === 'BCS' && renderUsersTable(usersList.filter(u => u.department === 'BCS'), 'Danh sách nhân sự: Ban Cán sự Năm nhất')}
               </div>
             </div>
           )}
