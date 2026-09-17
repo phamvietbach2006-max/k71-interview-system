@@ -429,7 +429,7 @@ export default function AdminView() {
               <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-[2rem] shadow-sm border border-white/50 overflow-hidden relative min-h-[70vh]">
                 <div className="absolute inset-0 overflow-y-auto">
                   <div className="transform scale-[0.9] origin-top">
-                    <Board hideHeader={true} />
+                    <Board hideHeader={true} department={viewDepartment} />
                   </div>
                 </div>
               </div>

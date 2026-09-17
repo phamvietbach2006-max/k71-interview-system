@@ -4,7 +4,7 @@ import { Users, PlayCircle, UserCheck, CheckCircle2, Clock, Loader2, Sparkles } 
 import MacBackground from '../components/MacBackground';
 import MacWindow from '../components/MacWindow';
 
-export default function Board() {
+export default function Board({ hideHeader, department }) {
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
 
   useEffect(() => {
@@ -18,10 +18,11 @@ export default function Board() {
       clearInterval(interval);
       socket.disconnect();
     };
-  }, []);
+  }, [department]);
 
   const fetchBoard = async () => {
-    const res = await fetch('/api/board');
+    const query = department ? `?department=${department}` : '';
+    const res = await fetch(`/api/board${query}`);
     const data = await res.json();
     setBoardData({
       ...data,
