@@ -39,18 +39,23 @@ export default function InterviewerView() {
 
   const fetchBoard = async () => {
     try {
-      const res = await fetch('/api/board');
+      const stored = JSON.parse(localStorage.getItem('user'));
+      const dept = user?.department || stored?.department;
+      const query = dept ? `?department=${dept}` : '';
+      const res = await fetch(`/api/board${query}`);
       const data = await res.json();
       setBoardData(data);
+      
       const all = [...(data.moving || []), ...(data.waiting || []), ...(data.interviewing || [])];
-      const stored = JSON.parse(localStorage.getItem('user'));
       const tableNum = user?.tableNumber || stored?.tableNumber;
       const roomNum = user?.roomNumber || stored?.roomNumber;
+      
       const candidate = all.find(c => 
         c.assignedTable === String(tableNum) && 
         c.assignedRoom === String(roomNum) &&
         (c.status === 'moving' || c.status === 'interviewing')
       );
+      
       setCurrentCandidate(candidate || null);
     } catch (e) {
       console.error(e);
@@ -133,7 +138,7 @@ export default function InterviewerView() {
 
   const confirmPresence = () => {
     if (currentCandidate) {
-      socketRef.current.emit('interviewer_confirm_presence', { interviewCode: currentCandidate.interviewCode });
+      socketRef.current.emit('interviewer_confirm_presence', { interviewCode: currentCandidate.interviewCode, department: currentCandidate.department || user.department });
     }
   };
 

@@ -631,13 +631,13 @@ app.delete('/api/users/:username', async (req, res) => {
 const buildPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(buildPath));
 
-app.post('/api/candidates', async (req, res) => {
-  try {
-    const { interviewCode, fullName, department } = req.body;
-    if (!interviewCode) return res.status(400).json({ error: "Thiếu Mã Ứng Viên" });
-    
-    let candidate = await Candidate.findOne({ interviewCode });
-    if (candidate) return res.status(400).json({ error: "Mã Ứng Viên đã tồn tại" });
+  app.post('/api/candidates/add', async (req, res) => {
+    try {
+      const { interviewCode, fullName, department } = req.body;
+      if (!interviewCode) return res.status(400).json({ error: "Thiếu Mã Ứng Viên" });
+      
+      let candidate = await Candidate.findOne({ interviewCode, department: department || "TCKT" });
+      if (candidate) return res.status(400).json({ error: `Mã Ứng Viên đã tồn tại trong ban ${department || "TCKT"}` });
     
     candidate = new Candidate({
       interviewCode,
