@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Monitor, List, CheckCircle } from 'lucide-react';
+import { Users, Monitor, List, CheckCircle, RefreshCw } from 'lucide-react';
 import io from 'socket.io-client';
 import Board from './Board';
 import ChatWidget from '../components/ChatWidget';
