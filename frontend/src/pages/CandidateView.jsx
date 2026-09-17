@@ -28,7 +28,7 @@ export default function CandidateView() {
     socketRef.current = io('/');
     
     socketRef.current.on('candidate_assigned', (data) => {
-      if (data.candidate.interviewCode === stored.interviewCode) {
+      if (data.candidate.interviewCode === stored.interviewCode && data.candidate.department === stored.department) {
         setStatus('moving');
         setHasAcked(false);
         setAssignedTable(data.tableNumber);
@@ -61,7 +61,7 @@ export default function CandidateView() {
     }
 
     const all = [...data.waiting, ...(data.moving || []), ...data.interviewing, ...data.completed];
-    const me = all.find(c => c.interviewCode === interviewCode);
+    const me = all.find(c => c.interviewCode === interviewCode && c.department === dept);
     if (me) {
       if (statusRef.current !== 'completed' && me.status === 'completed') {
         // Just transitioned to completed
@@ -86,6 +86,8 @@ export default function CandidateView() {
        localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate', department: data.department, token: data.token }));
        setUser({ ...stored, department: data.department });
        setStatus('active');
+         setAssignedTable(null);
+         setAssignedRoom(null);
        toast.success(`Chuyển sang check-in cho Ban ${data.department}!`);
     }
   };
