@@ -217,7 +217,7 @@ export default function ReceptionistView() {
           )}
         </div>
       </MacWindow>
-      <ChatWidget user={user} />
+      <ChatWidget currentUser={user} />
     </div>
   );
 }
