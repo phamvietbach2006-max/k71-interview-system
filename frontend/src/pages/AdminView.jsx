@@ -284,15 +284,20 @@ export default function AdminView() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((u, index) => (
+            {filteredUsers.map((u, index) => {
+              const currentRoles = draftRoles[u.username] || u.roles || [];
+              const currentDept = draftDepartments[u.username] !== undefined ? draftDepartments[u.username] : (u.department || "TCKT");
+              const hasChanges = draftRoles[u.username] !== undefined || draftDepartments[u.username] !== undefined;
+
+              return (
               <tr key={u.username} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
                 <td className="p-4 font-bold text-slate-500 text-center">{index + 1}</td>
                 <td className="p-4 font-bold text-slate-800">{u.username}</td>
                 <td className="p-4 text-slate-600 font-medium">{u.fullName || ""}</td>
                 <td className="p-4">
                   <select 
-                    value={u.department || "TCKT"}
-                    onChange={(e) => fetch("/api/users/update", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ username: u.username, department: e.target.value }) }).then(fetchUsers)}
+                    value={currentDept}
+                    onChange={(e) => setDraftDepartments({ ...draftDepartments, [u.username]: e.target.value })}
                     className="bg-slate-100 border border-slate-200 text-slate-700 rounded-lg px-3 py-1 text-sm font-bold focus:outline-none focus:border-blue-500"
                   >
                     <option value="TCKT">TCKT</option>
@@ -305,8 +310,8 @@ export default function AdminView() {
                       <label key={role} className="flex items-center gap-2 cursor-pointer">
                         <input 
                           type="checkbox" 
-                          checked={u.roles?.includes(role)} 
-                          onChange={() => updateUserRole(u.username, u.roles, role)}
+                          checked={currentRoles.includes(role)} 
+                          onChange={() => handleRoleToggle(u.username, u.roles, role)}
                           className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                         />
                         <span className="text-sm font-bold text-slate-600 uppercase tracking-wider">{role}</span>
@@ -315,10 +320,16 @@ export default function AdminView() {
                   </div>
                 </td>
                 <td className="p-4 text-center">
-                  <button onClick={() => handleDeleteUser(u.username)} className="text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors text-sm">Xóa</button>
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    {hasChanges && (
+                      <button onClick={() => saveUserChanges(u.username)} className="text-white font-bold bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg transition-colors text-sm shadow-sm w-full">Xác Nhận</button>
+                    )}
+                    <button onClick={() => handleDeleteUser(u.username)} className="text-red-500 hover:text-red-700 font-bold bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors text-sm w-full">Xóa</button>
+                  </div>
                 </td>
               </tr>
-            ))}
+              )
+            })}
             {filteredUsers.length === 0 && (
               <tr>
                 <td colSpan="5" className="p-8 text-center text-slate-400 italic">Không có dữ liệu</td>
