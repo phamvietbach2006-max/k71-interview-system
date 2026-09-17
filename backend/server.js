@@ -275,6 +275,19 @@ app.post('/api/evaluation', async (req, res) => {
       { $set: { status: 'active' } }
     );
 
+    // --- AUTO QUEUE FOR NEXT DEPARTMENT ---
+    // If the candidate applied to multiple departments, check them into the next one automatically
+    const otherPendingCandidate = await Candidate.findOne({ 
+      interviewCode, 
+      department: { $ne: department }, 
+      status: 'active' 
+    });
+    if (otherPendingCandidate) {
+      otherPendingCandidate.status = 'waiting';
+      otherPendingCandidate.checkInTime = new Date();
+      await otherPendingCandidate.save();
+    }
+
     io.emit('board_update');
     res.json({ success: true });
   } catch (err) {

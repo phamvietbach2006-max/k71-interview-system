@@ -88,7 +88,7 @@ export default function CandidateView() {
   };
 
   const handleCheckIn = () => {
-    socketRef.current.emit('candidate_checkin', { interviewCode: user.interviewCode });
+    socketRef.current.emit('candidate_checkin', { interviewCode: user.interviewCode, department: user.department });
   };
 
   const handleAckMoving = () => {
