@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCircle, LogIn, ArrowRight, UserCheck, LayoutDashboard, Hash, Monitor, User } from 'lucide-react';
+import { UserCircle, LogIn, ArrowRight, UserCheck, LayoutDashboard, Hash, Monitor, User, CheckCircle2 } from 'lucide-react';
 import MacBackground from '../components/MacBackground';
 
 export default function Login() {
@@ -28,6 +28,9 @@ export default function Login() {
         if (data.requireDepartment) {
           setTempUser({ code: code.trim(), departments: data.departments });
           setStep(1.5);
+        } else if (data.role === 'candidate_completed') {
+          setTempUser({ role: 'candidate_completed', message: data.message });
+          setStep(1.8); // New step for completed message
         } else if (data.role === 'candidate') {
           setTempUser(data);
           setStep(1.75); // Confirmation screen
@@ -256,8 +259,21 @@ export default function Login() {
               </button>
             </div>
           )}
+
+          {step === 1.8 && (
+            <div className="space-y-4 animate-fade-in text-center py-6">
+              <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <CheckCircle2 size={50} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-3xl font-black text-slate-800 tracking-tight">HOÀN TẤT</h2>
+              <p className="text-slate-500 font-medium text-lg leading-relaxed mt-2">
+                {tempUser?.message || 'Cảm ơn bạn đã tham gia phỏng vấn.'}
+              </p>
+              <p className="text-slate-400 mt-4 italic">Bây giờ bạn có thể ra về.</p>
+            </div>
+          )}
           
-          {step !== 1.75 && (
+          {step !== 1.75 && step !== 1.8 && (
             <button type="submit" className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 mt-8 rounded-2xl font-black text-lg shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
               <LogIn size={20} /> {step === 1 ? 'TIẾP TỤC' : step === 1.5 ? 'XÁC NHẬN VÀO PHÒNG CHỜ' : 'XÁC NHẬN VÀO BÀN'}
             </button>

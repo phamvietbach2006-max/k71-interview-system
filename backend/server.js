@@ -183,17 +183,26 @@ app.post('/api/login', async (req, res) => {
     // 1. Check if Candidate
     let candidates = await Candidate.find({ interviewCode: code });
     if (candidates.length > 0) {
-      if (candidates.length === 1) {
-        const token = jwt.sign({ id: candidates[0]._id, role: 'candidate', interviewCode: candidates[0].interviewCode }, JWT_SECRET, { expiresIn: '12h' });
-        return res.json({ success: true, role: 'candidate', interviewCode: candidates[0].interviewCode, department: candidates[0].department, applicationData: candidates[0].applicationData, token });
-      } else {
+      if (candidates.every(c => c.status === 'completed')) {
+        return res.json({ success: true, role: 'candidate_completed', message: 'Cảm ơn bạn đã tham gia phỏng vấn' });
+      }
+      
+      let pendingCandidates = candidates.filter(c => c.status !== 'completed');
+      
+      if (pendingCandidates.length === 1) {
+        const selectedCand = pendingCandidates[0];
+        const token = jwt.sign({ id: selectedCand._id, role: 'candidate', interviewCode: selectedCand.interviewCode }, JWT_SECRET, { expiresIn: '12h' });
+        return res.json({ success: true, role: 'candidate', interviewCode: selectedCand.interviewCode, department: selectedCand.department, applicationData: selectedCand.applicationData, token });
+      } else if (pendingCandidates.length > 1) {
         if (!department) {
-          return res.json({ success: true, requireDepartment: true, departments: candidates.map(c => c.department) });
+          return res.json({ success: true, requireDepartment: true, departments: pendingCandidates.map(c => c.department) });
         }
-        let selectedCand = candidates.find(c => c.department === department);
+        let selectedCand = pendingCandidates.find(c => c.department === department);
         if (selectedCand) {
           const token = jwt.sign({ id: selectedCand._id, role: 'candidate', interviewCode: selectedCand.interviewCode }, JWT_SECRET, { expiresIn: '12h' });
           return res.json({ success: true, role: 'candidate', interviewCode: selectedCand.interviewCode, department: selectedCand.department, applicationData: selectedCand.applicationData, token });
+        } else {
+          return res.status(400).json({ success: false, message: 'Ban đã chọn không hợp lệ hoặc đã phỏng vấn xong.' });
         }
       }
     }
@@ -278,19 +287,6 @@ app.post('/api/evaluation', async (req, res) => {
       { username: interviewerUsername },
       { $set: { status: 'active' } }
     );
-
-    // --- AUTO QUEUE FOR NEXT DEPARTMENT ---
-    // If the candidate applied to multiple departments, check them into the next one automatically
-    const otherPendingCandidate = await Candidate.findOne({ 
-      interviewCode, 
-      department: { $ne: department }, 
-      status: 'active' 
-    });
-    if (otherPendingCandidate) {
-      otherPendingCandidate.status = 'waiting';
-      otherPendingCandidate.checkInTime = new Date();
-      await otherPendingCandidate.save();
-    }
 
     io.emit('board_update');
     res.json({ success: true });

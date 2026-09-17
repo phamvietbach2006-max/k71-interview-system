@@ -383,20 +383,22 @@ export default function AdminView() {
 
           <div className="flex items-center gap-3">
             {['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'].includes(user.fullName) && (
-              <>
-                <button 
-                  onClick={handleCleanData}
-                  className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
-                >
-                  <Trash2 size={16} /> Làm sạch dữ liệu
-                </button>
-                <button 
-                  onClick={handleSwitchToInterviewer}
-                  className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
-                >
-                  <RefreshCw size={16} /> Chuyển sang Người PV
-                </button>
-              </>
+              <button 
+                onClick={handleCleanData}
+                className="bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+              >
+                <Trash2 size={16} /> Làm sạch dữ liệu
+              </button>
+            )}
+            {user.roles && user.roles.includes('interviewer') && (
+              <button onClick={handleSwitchToInterviewer} className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2">
+                <RefreshCw size={16} /> Sang Người PV
+              </button>
+            )}
+            {user.roles && user.roles.includes('receptionist') && (
+              <button onClick={() => performSwitchToRole('receptionist', '/receptionist')} className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 text-white">
+                <RefreshCw size={16} /> Sang Lễ Tân
+              </button>
             )}
             
             {activeTab === 'evaluations' && (

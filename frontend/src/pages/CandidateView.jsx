@@ -7,6 +7,8 @@ import MacWindow from '../components/MacWindow';
 export default function CandidateView() {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState('active'); // active, waiting, moving, interviewing, completed
+  const statusRef = useRef(status);
+  useEffect(() => { statusRef.current = status; }, [status]);
   const [assignedTable, setAssignedTable] = useState(null);
   const [assignedRoom, setAssignedRoom] = useState(null);
   const alertIntervalRef = useRef(null);
@@ -43,7 +45,10 @@ export default function CandidateView() {
   }, []);
 
   const fetchStatus = async (interviewCode) => {
-    const res = await fetch('/api/board');
+    const stored = JSON.parse(localStorage.getItem('user'));
+    const dept = user?.department || stored?.department;
+    const query = dept ? `?department=${dept}` : '';
+    const res = await fetch(`/api/board${query}`);
     const data = await res.json();
     
     // Find queue position if in waiting
@@ -57,9 +62,30 @@ export default function CandidateView() {
     const all = [...data.waiting, ...(data.moving || []), ...data.interviewing, ...data.completed];
     const me = all.find(c => c.interviewCode === interviewCode);
     if (me) {
+      if (statusRef.current !== 'completed' && me.status === 'completed') {
+        // Just transitioned to completed
+        setTimeout(checkNextDepartment, 3000);
+      }
       setStatus(me.status);
       setAssignedTable(me.assignedTable);
       setAssignedRoom(me.assignedRoom);
+    }
+  };
+
+  const checkNextDepartment = async () => {
+    const stored = JSON.parse(localStorage.getItem('user'));
+    if (!stored) return;
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: stored.interviewCode })
+    });
+    const data = await res.json();
+    if (data.success && data.role === 'candidate') {
+       localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate', department: data.department, token: data.token }));
+       setUser({ ...stored, department: data.department });
+       setStatus('active');
+       alert(`Chuyển sang check-in cho Ban ${data.department}!`);
     }
   };
 
