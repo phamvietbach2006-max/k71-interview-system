@@ -356,14 +356,23 @@ export default function InterviewerView() {
                         <div className="space-y-3">
                           {currentCandidate.applicationData && Object.keys(currentCandidate.applicationData).length > 0 ? (
                             Object.entries(currentCandidate.applicationData).map(([key, value], idx) => {
-                              if (['Id', 'Thời gian bắt đầu', 'Thời gian hoàn thành', 'Tên+ Nhận xét', 'Kết quả', 'Tên', 'Ngôn ngữ'].includes(key)) return null;
-                              return (
-                                <div key={idx} className="bg-white/80 p-3.5 rounded-xl shadow-sm border border-slate-100">
-                                  <div className="text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">{key}</div>
-                                  <div className="text-sm font-medium text-slate-800 break-words">{value}</div>
-                                </div>
-                              );
-                            })
+                                const hiddenKeys = ['Id', 'ID', 'Thời gian bắt đầu', 'Start time', 'Thời gian hoàn thành', 'Completion time', 'Tên+ Nhận xét', 'Kết quả', 'Tên', 'Name', 'Ngôn ngữ', 'Language'];
+                                if (hiddenKeys.includes(key)) return null;
+                                
+                                let displayValue = value;
+                                if (typeof value === 'string' && (key.toLowerCase().includes('facebook') || value.startsWith('http'))) {
+                                  let url = value;
+                                  if (!url.startsWith('http')) url = 'https://' + url;
+                                  displayValue = <a href={url} target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline">{value}</a>;
+                                }
+
+                                return (
+                                  <div key={idx} className="bg-white/80 p-3.5 rounded-xl shadow-sm border border-slate-100">
+                                    <div className="text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">{key}</div>
+                                    <div className="text-sm font-medium text-slate-800 break-words">{displayValue}</div>
+                                  </div>
+                                );
+                              })
                           ) : (
                             <div className="text-slate-500 italic text-sm font-medium">Không có dữ liệu.</div>
                           )}
