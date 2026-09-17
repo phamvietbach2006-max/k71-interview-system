@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send, User as UserIcon, Users, Circle } from 'lucide-react';
+import { MessageSquare, X, Send, User as UserIcon, Users, Circle, Search } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 export default function ChatWidget({ currentUser }) {
@@ -7,12 +7,15 @@ export default function ChatWidget({ currentUser }) {
   const [activeTab, setActiveTab] = useState('group'); // 'group' or username
   const [messages, setMessages] = useState([]);
   const [inputMsg, setInputMsg] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [staff, setStaff] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
   const ADMIN_NAMES = ['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'];
+  const userDept = currentUser?.department || 'TCKT';
+  const groupRoom = `group_${userDept}`;
 
   useEffect(() => {
     fetchStaff();
@@ -36,13 +39,13 @@ export default function ChatWidget({ currentUser }) {
     socketRef.current.on('messages_read', ({ reader, receiver }) => {
       setMessages(prev => prev.map(m => {
         let match = false;
-        if (receiver === 'group') {
-          if (m.receiver === 'group') match = true;
+        if (receiver.startsWith('group')) {
+          match = m.receiver === receiver;
         } else {
-          if (m.sender === receiver && m.receiver === reader) match = true;
+          match = m.sender === receiver && m.receiver === reader;
         }
         
-        if (match && !m.readBy?.includes(reader)) {
+        if (match) {
           return { ...m, readBy: [...(m.readBy || []), reader] };
         }
         return m;
@@ -58,7 +61,7 @@ export default function ChatWidget({ currentUser }) {
   // Mark as read whenever chat is open and activeTab changes or messages change
   useEffect(() => {
     if (isOpen && currentUser) {
-      markAsRead(activeTab);
+      markAsRead(activeTab === 'group' ? groupRoom : activeTab);
     }
     scrollToBottom();
   }, [messages, activeTab, isOpen]);
@@ -66,7 +69,8 @@ export default function ChatWidget({ currentUser }) {
   const fetchStaff = async () => {
     const res = await fetch('/api/staff');
     const data = await res.json();
-    setStaff(data.filter(u => u.username !== currentUser.username));
+    // Only show staff in the same department, and exclude self
+    setStaff(data.filter(u => u.username !== currentUser?.username && (u.department === userDept || (!u.department && userDept === 'TCKT'))));
   };
 
   const fetchMessages = async () => {
@@ -75,14 +79,14 @@ export default function ChatWidget({ currentUser }) {
     setMessages(data);
   };
 
-  const markAsRead = async (receiver) => {
+  const markAsRead = async (receiverId) => {
     try {
       await fetch('/api/messages/read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: currentUser.username,
-          receiver: receiver
+          receiver: receiverId
         })
       });
     } catch (e) {
@@ -94,10 +98,12 @@ export default function ChatWidget({ currentUser }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const sendMessage = async (e, customMsg = null) => {
+  const sendMessage = async (e, quickResponse = null) => {
     if (e) e.preventDefault();
-    const content = customMsg || inputMsg;
-    if (!content.trim()) return;
+    const content = quickResponse || inputMsg.trim();
+    if (!content) return;
+    
+    const receiverId = activeTab === 'group' ? groupRoom : activeTab;
 
     await fetch('/api/messages', {
       method: 'POST',
@@ -105,7 +111,7 @@ export default function ChatWidget({ currentUser }) {
       body: JSON.stringify({
         sender: currentUser.username,
         senderRole: currentUser.role,
-        receiver: activeTab,
+        receiver: receiverId,
         content: content
       })
     });
@@ -114,28 +120,30 @@ export default function ChatWidget({ currentUser }) {
 
   // Filter messages based on active tab
   const displayMessages = messages.filter(m => {
-    if (activeTab === 'group') return m.receiver === 'group';
-    return (m.sender === currentUser.username && m.receiver === activeTab) ||
-           (m.sender === activeTab && m.receiver === currentUser.username);
+    if (activeTab === 'group') return m.receiver === groupRoom;
+    return (m.sender === currentUser?.username && m.receiver === activeTab) ||
+           (m.sender === activeTab && m.receiver === currentUser?.username);
   });
 
   const unreadMessages = messages.filter(m => {
-    if (m.sender === currentUser.username) return false;
-    if (m.receiver !== currentUser.username && m.receiver !== 'group') return false;
-    return !(m.readBy || []).includes(currentUser.username);
+    if (m.sender === currentUser?.username) return false;
+    if (m.receiver !== currentUser?.username && m.receiver !== groupRoom) return false;
+    return !(m.readBy || []).includes(currentUser?.username);
   });
   
   const hasUnread = unreadMessages.length > 0;
 
   if (!currentUser) return null;
 
-  // Sort staff and extract unread ones
-  const staffWithUnread = staff.filter(s => unreadMessages.some(m => m.sender === s.username && m.receiver === currentUser.username));
-  const otherStaff = staff.filter(s => !staffWithUnread.includes(s));
+  // Search filter
+  const filteredStaff = staff.filter(s => {
+    const name = s.fullName || s.username || "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
-  const admins = otherStaff.filter(s => s.role === 'admin' && ADMIN_NAMES.includes(s.fullName));
-  const receptionists = otherStaff.filter(s => s.role === 'admin' && !ADMIN_NAMES.includes(s.fullName));
-  const interviewers = otherStaff.filter(s => s.role === 'interviewer');
+  // Sort staff and extract unread ones
+  const staffWithUnread = filteredStaff.filter(s => unreadMessages.some(m => m.sender === s.username && m.receiver === currentUser.username));
+  const otherStaff = filteredStaff.filter(s => !staffWithUnread.includes(s));
 
   const renderStaffList = (title, list) => {
     if (list.length === 0) return null;
@@ -148,7 +156,6 @@ export default function ChatWidget({ currentUser }) {
           const isOnline = onlineUsers.includes(s.username);
           const displayName = s.fullName || s.username;
           
-          // Check if this specific chat has unread messages
           const hasUnreadFromThisUser = unreadMessages.some(m => m.sender === s.username && m.receiver === currentUser.username);
           
           return (
@@ -177,8 +184,8 @@ export default function ChatWidget({ currentUser }) {
     );
   };
 
-  const isAllowedToChatInGroup = ADMIN_NAMES.includes(currentUser.fullName);
-  const groupHasUnread = unreadMessages.some(m => m.receiver === 'group');
+  const isAllowedToChatInGroup = ADMIN_NAMES.includes(currentUser.fullName) || currentUser.role === 'admin' || (currentUser.roles && currentUser.roles.includes('admin'));
+  const groupHasUnread = unreadMessages.some(m => m.receiver === groupRoom);
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
@@ -197,11 +204,11 @@ export default function ChatWidget({ currentUser }) {
       )}
 
       {isOpen && (
-        <div className="bg-white w-[450px] rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col h-[600px] animate-fade-in-up">
+        <div className="bg-white w-[500px] rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col h-[650px] animate-fade-in-up">
           {/* Header */}
           <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
             <h3 className="font-bold flex items-center gap-2">
-              <MessageSquare size={18} /> Chat Nội Bộ
+              <MessageSquare size={18} /> Chat Nội Bộ ({userDept})
             </h3>
             <button onClick={() => setIsOpen(false)} className="hover:bg-blue-700 p-1 rounded transition-colors">
               <X size={20} />
@@ -210,7 +217,20 @@ export default function ChatWidget({ currentUser }) {
 
           <div className="flex flex-1 overflow-hidden">
             {/* Sidebar (Contacts) */}
-            <div className="w-2/5 bg-gray-50 border-r border-gray-200 overflow-y-auto custom-scrollbar">
+            <div className="w-2/5 bg-gray-50 border-r border-gray-200 overflow-y-auto custom-scrollbar flex flex-col">
+              <div className="p-2 border-b">
+                <div className="relative">
+                  <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Tìm tên..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-lg pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              
               <div 
                 onClick={() => setActiveTab('group')}
                 className={`p-4 border-b cursor-pointer flex items-center justify-between ${activeTab === 'group' ? 'bg-blue-100 text-blue-700 font-bold' : 'hover:bg-gray-100 text-gray-700 font-bold'}`}
@@ -221,11 +241,9 @@ export default function ChatWidget({ currentUser }) {
                 {groupHasUnread && <span className="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>}
               </div>
               
-              <div className="py-2">
+              <div className="py-2 flex-1 overflow-y-auto">
                 {renderStaffList('Tin nhắn mới', staffWithUnread)}
-                {renderStaffList('Ban Admin', admins)}
-                {renderStaffList('Đội Phỏng Vấn', interviewers)}
-                {renderStaffList('Đội Lễ Tân', receptionists)}
+                {renderStaffList('Danh sách nhân sự', otherStaff)}
               </div>
             </div>
 
@@ -283,7 +301,7 @@ export default function ChatWidget({ currentUser }) {
               ) : (
                 <div className="p-3 border-t bg-gray-50">
                   <button 
-                    onClick={() => sendMessage(null, "Đã nhận thông tin ✅")}
+                    onClick={() => sendMessage(null, "Đã nhận thông báo.")}
                     className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm py-2.5 rounded-full transition-colors flex justify-center items-center gap-2 shadow-sm"
                   >
                     Xác nhận đã nhận thông tin
