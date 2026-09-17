@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { UserCircle, LogIn, ArrowRight, UserCheck, LayoutDashboard, Hash, Monitor, User, CheckCircle2 } from 'lucide-react';
 import MacBackground from '../components/MacBackground';
@@ -61,12 +62,12 @@ export default function Login() {
           navigate('/admin');
         }
       } else {
-        alert(data.message || "Không tìm thấy Mã số này. Vui lòng kiểm tra lại!");
+        toast.error(data.message || "Không tìm thấy Mã số này. Vui lòng kiểm tra lại!");
       }
     } 
     // Step 1.5: Select Department for Candidate applying to both
     else if (step === 1.5) {
-      if (!selectedDepartment) return alert("Vui lòng chọn Ban!");
+      if (!selectedDepartment) return toast.error("Vui lòng chọn Ban!");
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +78,7 @@ export default function Login() {
         setTempUser(data);
         setStep(1.75);
       } else {
-        alert(data.message || "Đăng nhập thất bại!");
+        toast.error(data.message || "Đăng nhập thất bại!");
       }
     }
     // Step 1.75: Confirm Candidate Info
@@ -88,7 +89,7 @@ export default function Login() {
     // Step 2: Set Table & Room Number for Interviewer
     else if (step === 2) {
       if (!tableNumber.trim() || !roomNumber.trim()) {
-        alert("Vui lòng nhập cả số phòng và số bàn!");
+        toast.error("Vui lòng nhập cả số phòng và số bàn!");
         return;
       }
       const res = await fetch('/api/login', {
@@ -112,7 +113,7 @@ export default function Login() {
         }));
         navigate('/interviewer');
       } else {
-        alert(data.message || "Lỗi khi xác nhận bàn!");
+        toast.error(data.message || "Lỗi khi xác nhận bàn!");
       }
     }
   };

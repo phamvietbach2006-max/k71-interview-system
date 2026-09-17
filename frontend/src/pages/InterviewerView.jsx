@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { Coffee, User, CheckCircle, Save, MessageSquare, UserCheck, Loader2, RefreshCw, Hand, X, XCircle, LogOut } from 'lucide-react';
@@ -46,7 +47,7 @@ export default function InterviewerView() {
       if (roomNum) localStorage.setItem('lastRoomNumber', roomNum);
       window.location.href = path;
     } else {
-      alert("Lỗi chuyển đổi quyền: " + data.message);
+      toast.error("Lỗi chuyển đổi quyền: " + data.message);
     }
   };
   const [user, setUser] = useState(null);
@@ -159,7 +160,7 @@ export default function InterviewerView() {
     if (data.success) {
       setShowQueueModal(false);
     } else {
-      alert(data.message || 'Lỗi khi gọi ứng viên');
+      toast.error(data.message || 'Lỗi khi gọi ứng viên');
     }
   };
 
@@ -188,10 +189,10 @@ export default function InterviewerView() {
       if (data.success) {
         setCurrentCandidate(null);
       } else {
-        alert(data.message || 'Lỗi khi hủy.');
+        toast.error(data.message || 'Lỗi khi hủy.');
       }
     } catch (err) {
-      alert('Network error');
+      toast.error('Network error');
     }
   };
 

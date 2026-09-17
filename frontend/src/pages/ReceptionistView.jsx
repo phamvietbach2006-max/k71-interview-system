@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Users, Monitor, List, CheckCircle, RefreshCw } from 'lucide-react';
 import io from 'socket.io-client';
@@ -49,7 +50,7 @@ export default function ReceptionistView() {
       if (roomNum) localStorage.setItem('lastRoomNumber', roomNum);
       window.location.href = path;
     } else {
-      alert("Lỗi chuyển đổi quyền: " + data.message);
+      toast.error("Lỗi chuyển đổi quyền: " + data.message);
     }
   };
   const socketRef = useRef(null);
@@ -96,12 +97,12 @@ export default function ReceptionistView() {
     if (!code) return;
     
     socketRef.current.emit('candidate_checkin', { interviewCode: code.trim().toUpperCase(), department: viewDepartment });
-    alert(`Đã gửi yêu cầu check-in cho ${code.trim().toUpperCase()}`);
+    toast.success(`Đã gửi yêu cầu check-in cho ${code.trim().toUpperCase()}`);
   };
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
-    if (!newCandidate.interviewCode || !newCandidate.fullName) return alert('Vui lòng nhập đủ thông tin');
+    if (!newCandidate.interviewCode || !newCandidate.fullName) return toast.error('Vui lòng nhập đủ thông tin');
     
     const res = await fetch('/api/candidates/add', {
       method: 'POST',
@@ -110,11 +111,11 @@ export default function ReceptionistView() {
     });
     const data = await res.json();
     if (data.success) {
-      alert('Thêm ứng viên thành công!');
+      toast.success('Thêm ứng viên thành công!');
       setNewCandidate({ interviewCode: '', fullName: '' });
       fetchCandidates();
     } else {
-      alert(data.message || 'Lỗi thêm ứng viên');
+      toast.error(data.message || 'Lỗi thêm ứng viên');
     }
   };
 

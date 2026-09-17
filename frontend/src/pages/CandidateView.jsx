@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { io } from 'socket.io-client';
 import { CheckCircle2, Clock, MapPin, Handshake } from 'lucide-react';
 import MacBackground from '../components/MacBackground';
@@ -85,7 +86,7 @@ export default function CandidateView() {
        localStorage.setItem('user', JSON.stringify({ interviewCode: data.interviewCode, role: 'candidate', department: data.department, token: data.token }));
        setUser({ ...stored, department: data.department });
        setStatus('active');
-       alert(`Chuyển sang check-in cho Ban ${data.department}!`);
+       toast.success(`Chuyển sang check-in cho Ban ${data.department}!`);
     }
   };
 

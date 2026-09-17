@@ -48,7 +48,7 @@ export default function AdminView() {
       if (roomNum) localStorage.setItem('lastRoomNumber', roomNum);
       window.location.href = path;
     } else {
-      alert("Lỗi chuyển đổi quyền: " + data.message);
+      toast.error("Lỗi chuyển đổi quyền: " + data.message);
     }
   };
 
@@ -89,7 +89,7 @@ export default function AdminView() {
   }, [activeTab]);
 
   const performSwitchRole = async (rNum, tNum) => {
-    if (!tNum || !rNum) return alert('Vui lòng nhập số phòng và số bàn');
+    if (!tNum || !rNum) return toast.error('Vui lòng nhập số phòng và số bàn');
     
     const res = await fetch('/api/staff/switch-role', {
       method: 'POST',
@@ -154,7 +154,7 @@ export default function AdminView() {
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
-    if (!newCandidate.interviewCode || !newCandidate.fullName) return alert('Vui lòng điền đủ Mã Ứng Viên và Họ Tên');
+    if (!newCandidate.interviewCode || !newCandidate.fullName) return toast.error('Vui lòng điền đủ Mã Ứng Viên và Họ Tên');
     const res = await fetch('/api/candidates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -162,16 +162,16 @@ export default function AdminView() {
     });
     const data = await res.json();
     if (data.success) {
-      alert('Thêm ứng viên thành công!');
+      toast.success('Thêm ứng viên thành công!');
       setNewCandidate({ interviewCode: '', fullName: '', department: 'TCKT' });
       fetchCandidates();
     } else {
-      alert(data.error || 'Có lỗi xảy ra');
+      toast.error(data.error || 'Có lỗi xảy ra');
     }
   };
 
   const handleAddUser = async () => {
-    if (!newUser.username) return alert('Vui lòng nhập tài khoản');
+    if (!newUser.username) return toast.error('Vui lòng nhập tài khoản');
     try {
       const res = await fetch('/api/users/add', {
         method: 'POST',
@@ -180,14 +180,14 @@ export default function AdminView() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Đã thêm nhân sự thành công!');
+        toast.success('Đã thêm nhân sự thành công!');
         setNewUser({ username: '', fullName: '', department: 'TCKT', roles: ['interviewer'] });
         fetchUsers();
       } else {
-        alert(data.error);
+        toast(data.error);
       }
     } catch (err) {
-      alert(err.message);
+      toast(err.message);
     }
   };
 
@@ -225,7 +225,7 @@ export default function AdminView() {
     setDraftDepartments(newDraftDepts);
     
     fetchUsers();
-    alert("Cập nhật thành công!");
+    toast.success("Cập nhật thành công!");
   };
 
   const handleDeleteUser = async (username) => {
@@ -236,10 +236,10 @@ export default function AdminView() {
       if (data.success) {
         fetchUsers();
       } else {
-        alert(data.error);
+        toast(data.error);
       }
     } catch (err) {
-      alert(err.message);
+      toast(err.message);
     }
   };
 
@@ -277,11 +277,11 @@ export default function AdminView() {
     });
     const data = await res.json();
     if (data.success) {
-      alert("✅ Đã làm sạch dữ liệu thành công!");
+      toast.success("✅ Đã làm sạch dữ liệu thành công!");
       fetchBoard();
       if (activeTab === 'evaluations') fetchEvaluations();
     } else {
-      alert("Lỗi: " + data.message);
+      toast.error("Lỗi: " + data.message);
     }
   };
 
