@@ -211,11 +211,13 @@ export default function AdminView() {
     alert(`Đã gửi yêu cầu check-in cho ${code.trim().toUpperCase()}`);
   };
 
+  const filteredEvaluations = evaluations.filter(e => e.department === viewDepartment || (!e.department && viewDepartment === 'TCKT'));
+
   const exportCSV = () => {
-    if (evaluations.length === 0) return;
+    if (filteredEvaluations.length === 0) return;
     
     const headers = ['Ứng viên', 'Người PV', 'Thái độ', 'Kỹ năng', 'Xử lý TH', 'Ghi chú', 'Kết quả'];
-    const rows = evaluations.map(e => [
+    const rows = filteredEvaluations.map(e => [
       `"${e.candidateName || e.interviewCode}"`, `"${e.interviewerName || e.interviewerUsername}"`, e.attitudeScore, e.skillScore, e.problemSolvingScore, `"${e.notes || ''}"`, e.result
     ]);
     
@@ -241,7 +243,8 @@ export default function AdminView() {
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-slate-100/80 text-slate-700 border-b-2 border-slate-200">
-              <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Tài Khoản</th>
+              <th className="p-4 font-black tracking-wider uppercase text-sm w-[5%] text-center">STT</th>
+              <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Tài Khoản</th>
               <th className="p-4 font-black tracking-wider uppercase text-sm w-[25%]">Họ và Tên</th>
               <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Ban</th>
               <th className="p-4 font-black tracking-wider uppercase text-sm w-auto">Phân Quyền</th>
@@ -249,8 +252,9 @@ export default function AdminView() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map(u => (
+            {filteredUsers.map((u, index) => (
               <tr key={u.username} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
+                <td className="p-4 font-bold text-slate-500 text-center">{index + 1}</td>
                 <td className="p-4 font-bold text-slate-800">{u.username}</td>
                 <td className="p-4 text-slate-600 font-medium">{u.fullName || ""}</td>
                 <td className="p-4">
@@ -472,11 +476,11 @@ export default function AdminView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {evaluations.length === 0 ? (
+                    {filteredEvaluations.length === 0 ? (
                       <tr>
                         <td colSpan="8" className="p-10 text-center text-slate-500 italic font-medium">Chưa có dữ liệu đánh giá nào.</td>
                       </tr>
-                    ) : evaluations.map((e, index) => {
+                    ) : filteredEvaluations.map((e, index) => {
                       const avg = ((e.attitudeScore + e.skillScore + e.problemSolvingScore) / 3).toFixed(1);
                       return (
                         <tr key={e._id} className={`border-b border-slate-100 hover:bg-blue-50/50 transition-colors ${index % 2 === 0 ? 'bg-white/40' : 'bg-transparent'}`}>
@@ -589,6 +593,7 @@ export default function AdminView() {
                 <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                     <tr className="bg-slate-50/80 text-slate-700 border-b-2 border-slate-200">
+                      <th className="p-4 font-black tracking-wider uppercase text-sm w-[5%] text-center">STT</th>
                       <th className="p-4 font-black tracking-wider uppercase text-sm w-[20%]">Họ và tên</th>
                       <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Mã Ứng Viên</th>
                       <th className="p-4 font-black tracking-wider uppercase text-sm w-[15%]">Ban</th>
@@ -598,8 +603,9 @@ export default function AdminView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {candidates.map(c => (
+                    {candidates.filter(c => c.department === viewDepartment || (!c.department && viewDepartment === 'TCKT')).map((c, index) => (
                       <tr key={c._id} className="border-b border-slate-100 hover:bg-white/60 transition-colors">
+                        <td className="p-4 font-bold text-slate-500 text-center">{index + 1}</td>
                         <td className="p-4 font-bold text-slate-800">{c.applicationData?.['Họ và tên'] || c.applicationData?.['Họ tên'] || '-'}</td>
                         <td className="p-4 font-bold text-slate-800">{c.interviewCode}</td>
                         <td className="p-4 text-slate-600 font-medium">{c.department || "TCKT"}</td>
