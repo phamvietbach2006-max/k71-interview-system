@@ -242,6 +242,9 @@ app.get('/api/board', async (req, res) => {
 });
 
 app.get('/api/tv-board', async (req, res) => {
+  const { department } = req.query;
+  const filter = department ? { department } : {};
+  
   const fields = {
     interviewCode: 1,
     status: 1,
@@ -249,11 +252,12 @@ app.get('/api/tv-board', async (req, res) => {
     assignedRoom: 1,
     assignedTable: 1,
     'applicationData.Họ và tên': 1,
+    'applicationData.Họ tên': 1,
     checkInTime: 1
   };
-  const waiting = await Candidate.find({ status: 'waiting' }).select(fields).sort({ checkInTime: 1 }).lean();
-  const moving = await Candidate.find({ status: 'moving' }).select(fields).lean();
-  const interviewing = await Candidate.find({ status: 'interviewing' }).select(fields).lean();
+  const waiting = await Candidate.find({ status: 'waiting', ...filter }).select(fields).sort({ checkInTime: 1 }).lean();
+  const moving = await Candidate.find({ status: 'moving', ...filter }).select(fields).lean();
+  const interviewing = await Candidate.find({ status: 'interviewing', ...filter }).select(fields).lean();
   res.json({ waiting, moving, interviewing });
 });
 

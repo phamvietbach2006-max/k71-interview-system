@@ -49,9 +49,12 @@ export default function Login() {
             setTempUser(data);
             setStep(2); // Ask for Table & Room Number
           }
+        } else if (data.role === 'receptionist' || (data.roles && data.roles.includes('receptionist') && !data.roles.includes('admin'))) {
+          localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: 'receptionist', department: data.department, roles: data.roles, token: data.token }));
+          navigate('/receptionist');
         } else {
-          // Admin / Receptionist
-          localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: data.role, department: data.department, roles: data.roles, token: data.token }));
+          // Admin
+          localStorage.setItem('user', JSON.stringify({ username: data.username, fullName: data.fullName, role: 'admin', department: data.department, roles: data.roles, token: data.token }));
           navigate('/admin');
         }
       } else {
@@ -260,12 +263,6 @@ export default function Login() {
             </button>
           )}
         </form>
-
-        <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
-          <button onClick={() => navigate('/tv')} className="group flex items-center justify-center gap-2 w-full text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 hover:bg-indigo-100 py-3 rounded-xl">
-            <Monitor size={18} /> Chế độ Trình chiếu TV <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
       </div>
     </div>
   );

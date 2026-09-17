@@ -203,14 +203,6 @@ export default function AdminView() {
     }
   };
 
-  const handleManualCheckIn = () => {
-    const code = window.prompt("Nhập MSSV (hoặc Mã PV) của ứng viên để Check-in hộ:");
-    if (!code) return;
-    
-    socketRef.current.emit('candidate_checkin', { interviewCode: code.trim().toUpperCase(), department: viewDepartment });
-    alert(`Đã gửi yêu cầu check-in cho ${code.trim().toUpperCase()}`);
-  };
-
   const filteredEvaluations = evaluations.filter(e => e.department === viewDepartment || (!e.department && viewDepartment === 'TCKT'));
   const filteredCandidates = candidates.filter(c => c.department === viewDepartment || (!c.department && viewDepartment === 'TCKT'));
 
@@ -303,7 +295,7 @@ export default function AdminView() {
     <div className="min-h-screen relative overflow-hidden p-4 md:p-8 font-sans flex flex-col items-center">
       <MacBackground />
 
-      <MacWindow title={`Dashboard Điều Khiển (Admin & Lễ Tân) - ${user.fullName || user.username}`} className="w-full max-w-[1600px] flex-1" contentClassName="p-0 flex flex-col h-full">
+      <MacWindow title={`Admin Dashboard - ${user.fullName || user.username}`} className="w-full max-w-[1600px] flex-1" contentClassName="p-0 flex flex-col h-full">
         {/* Navigation Tabs */}
         <div className="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-md shrink-0">
           <div className="flex items-center gap-4">
@@ -351,12 +343,6 @@ export default function AdminView() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button 
-              onClick={handleManualCheckIn}
-              className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
-            >
-              <Users size={16} /> Check-in Hộ
-            </button>
             {['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'].includes(user.fullName) && (
               <>
                 <button 

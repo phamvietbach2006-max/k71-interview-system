@@ -7,6 +7,10 @@ export default function TvView() {
   const [boardData, setBoardData] = useState({ waiting: [], moving: [], interviewing: [] });
   const socketRef = useRef(null);
 
+  // Get department from URL query string
+  const queryParams = new URLSearchParams(window.location.search);
+  const viewDepartment = queryParams.get('department') || 'TCKT';
+
   useEffect(() => {
     fetchBoard();
     const interval = setInterval(fetchBoard, 3000);
@@ -18,11 +22,11 @@ export default function TvView() {
       clearInterval(interval);
       socketRef.current.disconnect();
     };
-  }, []);
+  }, [viewDepartment]);
 
   const fetchBoard = async () => {
     try {
-      const res = await fetch("/api/tv-board");
+      const res = await fetch(`/api/tv-board?department=${viewDepartment}`);
       const data = await res.json();
       setBoardData(data);
     } catch (err) {

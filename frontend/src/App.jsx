@@ -5,6 +5,7 @@ import Board from './pages/Board';
 import CandidateView from './pages/CandidateView';
 import InterviewerView from './pages/InterviewerView';
 import AdminView from './pages/AdminView';
+import ReceptionistView from './pages/ReceptionistView';
 import TvView from './pages/TvView';
 import Footer from './components/Footer';
 
@@ -20,6 +21,7 @@ function App() {
             <Route path="/candidate" element={<CandidateView />} />
             <Route path="/interviewer" element={<InterviewerView />} />
             <Route path="/admin" element={<AdminView />} />
+            <Route path="/receptionist" element={<ReceptionistView />} />
           </Routes>
         </div>
         <Footer />
