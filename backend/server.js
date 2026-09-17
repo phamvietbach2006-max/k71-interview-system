@@ -80,6 +80,7 @@ const assignCandidates = async () => {
     for (let interviewer of availableInterviewers) {
       // Concurrency check: Ensure no candidate is currently moving or interviewing at this room/table
       const busyCandidate = await Candidate.findOne({
+        department: interviewer.department,
         assignedRoom: interviewer.roomNumber,
         assignedTable: interviewer.tableNumber,
         status: { $in: ['moving', 'interviewing'] }
@@ -519,10 +520,11 @@ app.post('/api/interviewer/call', async (req, res) => {
     if (!interviewer) return res.status(400).json({ success: false, message: 'Interviewer not ready' });
 
     const busyCandidate = await Candidate.findOne({
-      assignedRoom: interviewer.roomNumber,
-      assignedTable: interviewer.tableNumber,
-      status: { $in: ['moving', 'interviewing'] }
-    });
+        department: interviewer.department,
+        assignedRoom: interviewer.roomNumber,
+        assignedTable: interviewer.tableNumber,
+        status: { $in: ['moving', 'interviewing'] }
+      });
     if (busyCandidate) return res.status(400).json({ success: false, message: 'Bàn này đang có người phỏng vấn!' });
 
     const candidate = await Candidate.findOneAndUpdate(
