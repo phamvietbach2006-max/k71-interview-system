@@ -15,6 +15,8 @@ export default function AdminView() {
   const [candidates, setCandidates] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [activeTab, setActiveTab] = useState('board'); // board, evaluations, users
+  const [draftRoles, setDraftRoles] = useState({});
+  const [draftDepartments, setDraftDepartments] = useState({});
   const [newUser, setNewUser] = useState({ username: '', fullName: '', department: 'TCKT', roles: ['interviewer'] });
   const [newCandidate, setNewCandidate] = useState({ interviewCode: '', fullName: '', department: 'TCKT' });
   const [showTablePrompt, setShowTablePrompt] = useState(false);
@@ -144,6 +146,43 @@ export default function AdminView() {
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  
+  const handleRoleToggle = (username, currentRoles, roleToToggle) => {
+    const roles = draftRoles[username] || currentRoles || [];
+    let newRoles = [...roles];
+    if (newRoles.includes(roleToToggle)) {
+      newRoles = newRoles.filter(r => r !== roleToToggle);
+    } else {
+      newRoles.push(roleToToggle);
+    }
+    setDraftRoles({ ...draftRoles, [username]: newRoles });
+  };
+
+  const saveUserChanges = async (username) => {
+    const roles = draftRoles[username];
+    const dept = draftDepartments[username];
+    const payload = { username };
+    if (roles !== undefined) payload.roles = roles;
+    if (dept !== undefined) payload.department = dept;
+    
+    await fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const newDraftRoles = { ...draftRoles };
+    delete newDraftRoles[username];
+    setDraftRoles(newDraftRoles);
+    
+    const newDraftDepts = { ...draftDepartments };
+    delete newDraftDepts[username];
+    setDraftDepartments(newDraftDepts);
+    
+    fetchUsers();
+    alert("Cập nhật thành công!");
   };
 
   const handleDeleteUser = async (username) => {

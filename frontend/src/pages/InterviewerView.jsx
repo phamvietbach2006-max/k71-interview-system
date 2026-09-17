@@ -6,6 +6,21 @@ import ChatWidget from '../components/ChatWidget';
 
 export default function InterviewerView() {
   const navigate = useNavigate();
+
+  const performSwitchToRole = async (roleName, path) => {
+    const res = await fetch('/api/staff/switch-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user.username, targetRole: roleName })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const stored = JSON.parse(localStorage.getItem('user'));
+      stored.role = roleName;
+      localStorage.setItem('user', JSON.stringify(stored));
+      window.location.href = path;
+    }
+  };
   const [user, setUser] = useState(null);
   const [currentCandidate, setCurrentCandidate] = useState(null);
   const [isBreak, setIsBreak] = useState(false);
@@ -120,22 +135,7 @@ export default function InterviewerView() {
     }
   };
 
-  const switchRole = async () => {
-    const res = await fetch('/api/staff/switch-role', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: user.username, targetRole: 'admin' })
-    });
-    const data = await res.json();
-    if (data.success) {
-      const stored = JSON.parse(localStorage.getItem('user'));
-      stored.role = 'admin';
-      if (data.token) stored.token = data.token;
-      localStorage.setItem('user', JSON.stringify(stored));
-      navigate('/admin');
-    }
-  };
-
+  
   const confirmPresence = () => {
     if (currentCandidate) {
       socketRef.current.emit('interviewer_confirm_presence', { interviewCode: currentCandidate.interviewCode, department: currentCandidate.department || user.department });
@@ -230,11 +230,16 @@ export default function InterviewerView() {
               </div>
               
               {/* Role Switcher for specific admins */}
-              {['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'].includes(user.fullName) && (
-                <button onClick={switchRole} className="ml-4 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-sm font-bold border border-white/30 transition-all flex items-center gap-2">
-                  <RefreshCw size={16} /> Admin
-                </button>
-              )}
+              {user.roles && user.roles.includes('admin') && (
+        <button onClick={() => performSwitchToRole('admin', '/admin')} className="ml-4 bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-xl text-sm font-bold border border-amber-400 transition-all flex items-center gap-2 text-white shadow-sm">
+          <RefreshCw size={16} /> Admin
+        </button>
+      )}
+      {user.roles && user.roles.includes('receptionist') && (
+        <button onClick={() => performSwitchToRole('receptionist', '/receptionist')} className="ml-4 bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-xl text-sm font-bold border border-purple-400 transition-all flex items-center gap-2 text-white shadow-sm">
+          <RefreshCw size={16} /> Lễ Tân
+        </button>
+      )}
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto justify-end">

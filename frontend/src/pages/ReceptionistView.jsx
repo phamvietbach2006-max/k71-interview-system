@@ -9,6 +9,21 @@ import MacWindow from '../components/MacWindow';
 
 export default function ReceptionistView() {
   const navigate = useNavigate();
+
+  const performSwitchToRole = async (roleName, path) => {
+    const res = await fetch('/api/staff/switch-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user.username, targetRole: roleName })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const stored = JSON.parse(localStorage.getItem('user'));
+      stored.role = roleName;
+      localStorage.setItem('user', JSON.stringify(stored));
+      window.location.href = path;
+    }
+  };
   const socketRef = useRef(null);
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [candidates, setCandidates] = useState([]);
@@ -118,6 +133,16 @@ export default function ReceptionistView() {
             >
               <CheckCircle size={16} /> Check-in Hộ
             </button>
+            {user.roles && user.roles.includes('admin') && (
+              <button onClick={() => performSwitchToRole('admin', '/admin')} className="bg-amber-600 hover:bg-amber-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 text-white">
+                <RefreshCw size={16} /> Sang Admin
+              </button>
+            )}
+            {user.roles && user.roles.includes('interviewer') && (
+              <button onClick={() => performSwitchToRole('interviewer', '/interviewer')} className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 text-white">
+                <RefreshCw size={16} /> Sang Người PV
+              </button>
+            )}
           </div>
         </div>
 
