@@ -416,7 +416,7 @@ app.post('/api/messages', async (req, res) => {
     const { sender, senderRole, receiver, content } = req.body;
     
     // Group chat requires admin privileges
-    if (receiver === 'group') {
+    if (receiver.startsWith('group')) {
       const user = await User.findOne({ username: sender });
       const isAdmin = user && (
         user.role === 'admin' || 
@@ -425,7 +425,7 @@ app.post('/api/messages', async (req, res) => {
         user.username === 'Phạm Việt Bách'
       );
       if (!isAdmin) {
-        return res.status(403).json({ error: 'Chỉ Admin mới có quyền gửi thông báo chung!' });
+        return res.status(403).json({ error: 'Only admins can send group messages' });
       }
     }
 
@@ -440,10 +440,10 @@ app.post('/api/messages', async (req, res) => {
 
 app.post('/api/messages/read', async (req, res) => {
   try {
-    const { username, receiver } = req.body; // who is reading, and what chat they are reading (sender username or 'group')
+    const { username, receiver } = req.body; // who is reading, and what chat they are reading (sender username or 'group_XYZ')
     let filter = {};
-    if (receiver === 'group') {
-      filter = { receiver: 'group' };
+    if (receiver.startsWith('group')) {
+      filter = { receiver: receiver };
     } else {
       filter = { sender: receiver, receiver: username };
     }
@@ -548,10 +548,10 @@ app.post('/api/staff/switch-role', async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     
-    // Safety check using roles
-    const hasAdmin = user.role === 'admin' || (user.roles && user.roles.includes('admin'));
-    if (!hasAdmin) {
-      return res.status(403).json({ success: false, message: 'Not allowed to switch roles' });
+    // Safety check: User can switch to targetRole if they have it in their roles array
+    const allowed = user.roles && user.roles.includes(targetRole);
+    if (!allowed && user.role !== 'admin' && !(user.roles && user.roles.includes('admin'))) {
+      return res.status(403).json({ success: false, message: 'Not allowed to switch to this role' });
     }
 
     user.role = targetRole;
