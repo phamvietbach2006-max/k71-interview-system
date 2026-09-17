@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Board from './pages/Board';
 import CandidateView from './pages/CandidateView';
@@ -11,7 +12,8 @@ import Footer from './components/Footer';
 
 function App() {
   return (
-    <Router>
+    <ErrorBoundary>
+      <Router>
       <div className="flex flex-col min-h-screen">
         <div className="flex-1 flex flex-col">
           <Routes>
@@ -27,6 +29,7 @@ function App() {
         <Footer />
       </div>
     </Router>
+    </ErrorBoundary>
   );
 }
 

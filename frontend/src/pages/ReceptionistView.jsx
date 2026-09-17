@@ -143,16 +143,6 @@ export default function ReceptionistView() {
                 <RefreshCw size={16} /> Sang Người PV
               </button>
             )}
-            {user.roles && user.roles.includes('admin') && (
-              <button onClick={() => performSwitchToRole('admin', '/admin')} className="bg-amber-600 hover:bg-amber-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 text-white">
-                <RefreshCw size={16} /> Sang Admin
-              </button>
-            )}
-            {user.roles && user.roles.includes('interviewer') && (
-              <button onClick={() => performSwitchToRole('interviewer', '/interviewer')} className="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 text-white">
-                <RefreshCw size={16} /> Sang Người PV
-              </button>
-            )}
           </div>
         </div>
 
