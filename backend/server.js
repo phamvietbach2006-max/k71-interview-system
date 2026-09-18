@@ -640,7 +640,31 @@ app.delete('/api/users/:username', async (req, res) => {
 const buildPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(buildPath));
 
-  app.post('/api/candidates/add', async (req, res) => {
+  
+app.post('/api/candidates/checkin', async (req, res) => {
+  let { interviewCode, department } = req.body;
+  if (interviewCode) interviewCode = interviewCode.trim().toUpperCase();
+
+  try {
+    let candidate = await Candidate.findOne({ interviewCode, department });
+    if (!candidate) {
+      return res.status(404).json({ success: false, message: 'Không có thông tin bạn đó trúng tuyển vào ban này!' });
+    }
+    if (candidate.status === 'active' || !candidate.status) {
+      candidate.status = 'waiting';
+      candidate.checkInTime = new Date();
+      await candidate.save();
+      io.emit('board_update');
+      return res.json({ success: true, message: 'Check-in thành công!', candidate });
+    } else {
+      return res.status(400).json({ success: false, message: 'Ứng viên này đã check-in rồi!' });
+    }
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/candidates/add', async (req, res) => {
     try {
       const { interviewCode, fullName, department } = req.body;
       if (!interviewCode) return res.status(400).json({ error: "Thiếu Mã Ứng Viên" });
