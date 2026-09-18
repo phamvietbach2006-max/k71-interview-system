@@ -212,6 +212,17 @@ app.post('/api/login', async (req, res) => {
     const escapedCode = code.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
     let user = await User.findOne({ username: { $regex: new RegExp(`^${escapedCode}$`, 'i') } });
     if (user) {
+        const { password } = req.body;
+        const expectedPassword = user.password || 'Abc@123';
+        
+        if (!password) {
+          return res.json({ success: true, requirePassword: true });
+        }
+        
+        if (password !== expectedPassword) {
+          return res.status(401).json({ success: false, message: 'Sai mật khẩu!' });
+        }
+
       if (user.role === 'interviewer') {
         if (tableNumber) user.tableNumber = tableNumber;
         if (roomNumber) user.roomNumber = roomNumber;
