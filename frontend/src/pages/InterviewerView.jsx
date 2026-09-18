@@ -240,7 +240,15 @@ export default function InterviewerView() {
     setCurrentCandidate(null);
   };
 
-  if (!user) return <div className="min-h-screen flex items-center justify-center">Đăng nhập với quyền Người phỏng vấn...</div>;
+  
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+    }
+  }, [navigate]);
+
+  if (!user) return null;
+
 
   return (
     <div className="min-h-screen relative overflow-hidden p-4 md:p-8 font-sans flex flex-col items-center">

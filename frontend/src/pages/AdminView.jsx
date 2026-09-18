@@ -323,7 +323,15 @@ export default function AdminView() {
     document.body.removeChild(link);
   };
 
-  if (!user.username || !isSuperAdmin) return <div className="min-h-screen flex items-center justify-center">Truy cập bị từ chối.</div>;
+  
+  useEffect(() => {
+    if (!user.username || !isSuperAdmin) {
+      navigate('/');
+    }
+  }, [navigate]);
+
+  if (!user.username || !isSuperAdmin) return null;
+
 
   const renderUsersTable = (filteredUsers, title) => (
     <div className="mb-8">

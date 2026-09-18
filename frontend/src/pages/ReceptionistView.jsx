@@ -134,9 +134,13 @@ export default function ReceptionistView() {
 
   const filteredCandidates = candidates.filter(c => c.department === viewDepartment || (!c.department && viewDepartment === 'TCKT'));
 
-  if (!user.username || user.role !== 'receptionist') {
-    return <div className="min-h-screen flex items-center justify-center">Truy cập bị từ chối. (Cần quyền Lễ Tân)</div>;
-  }
+    useEffect(() => {
+    if (!user.username || user.role !== 'receptionist') {
+      navigate('/');
+    }
+  }, [user.username, user.role, navigate]);
+
+  if (!user.username || user.role !== 'receptionist') return null;
 
   return (
     <div className="min-h-screen relative overflow-hidden p-4 md:p-8 font-sans flex flex-col items-center">

@@ -25,17 +25,19 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     
-    // Step 1: Verify Code (MSSV/PVxxx)
-    if (step === 1) {
+    // Step 1 or 1.2: Verify Code and Password
+    if (step === 1 || step === 1.2) {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim() })
+        body: JSON.stringify({ code: code.trim(), password })
       });
       const data = await res.json();
       
       if (data.success) {
-        if (data.requireDepartment) {
+        if (data.requirePassword) {
+          setStep(1.2);
+        } else if (data.requireDepartment) {
           setTempUser({ code: code.trim(), departments: data.departments });
           setStep(1.5);
         } else if (data.role === 'candidate_completed') {
