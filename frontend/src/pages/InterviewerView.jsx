@@ -491,12 +491,12 @@ export default function InterviewerView() {
                       </div>
 
                       {/* Right 1/2: Evaluation Form */}
-                      <div className="xl:w-1/2 space-y-5 flex flex-col h-[70vh] overflow-y-auto custom-scrollbar pr-2">
+                      <div className="xl:w-1/2 space-y-5 flex flex-col">
 
                         {/* Interview Questions Section - ONLY FOR TCKT */}
                         {isTCKT && (
-                        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar">
-                          <h3 className="font-bold text-slate-700 text-lg border-b pb-2 sticky top-0 bg-white/90 backdrop-blur-md z-10">Danh sách Câu hỏi Phỏng vấn</h3>
+                        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-4">
+                          <h3 className="font-bold text-slate-700 text-lg border-b pb-2">Danh sách Câu hỏi Phỏng vấn</h3>
                           {INTERVIEW_QUESTIONS.map((q) => (
                             <div key={q.id} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                               <div className="flex justify-between items-start mb-3">
