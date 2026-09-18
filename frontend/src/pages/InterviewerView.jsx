@@ -321,6 +321,13 @@ export default function InterviewerView() {
   );
 
 
+  const answeredQuestions = Object.values(questionData).filter(q => q.score > 0);
+  const avgQuestions = answeredQuestions.length > 0 
+    ? answeredQuestions.reduce((sum, q) => sum + q.score, 0) / answeredQuestions.length 
+    : 0;
+  const avgGeneral = (Number(attitude) + Number(skill) + Number(problemSolving)) / 3;
+  const finalScore = ((avgQuestions * 0.7) + (avgGeneral * 0.3)).toFixed(2);
+
   return (
     <div className="min-h-screen relative overflow-hidden p-4 md:p-8 font-sans flex flex-col items-center">
       {/* Universal Background */}
@@ -480,7 +487,37 @@ export default function InterviewerView() {
                       </div>
 
                       {/* Right 1/2: Evaluation Form */}
-                      <div className="xl:w-1/2 space-y-5 flex flex-col justify-between h-[70vh]">
+                      <div className="xl:w-1/2 space-y-5 flex flex-col h-[70vh] overflow-y-auto custom-scrollbar pr-2">
+
+                        {/* Interview Questions Section */}
+                        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                          <h3 className="font-bold text-slate-700 text-lg border-b pb-2 sticky top-0 bg-white/90 backdrop-blur-md z-10">Danh sách Câu hỏi Phỏng vấn</h3>
+                          {INTERVIEW_QUESTIONS.map((q) => (
+                            <div key={q.id} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                              <div className="flex justify-between items-start mb-3">
+                                <label className="text-sm font-bold text-slate-700 flex-1 pr-4 leading-relaxed">{q.text}</label>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="text-xs text-slate-500 font-bold whitespace-nowrap">Điểm:</span>
+                                  <input 
+                                    type="number" min="0" max="10" 
+                                    className="w-14 h-8 border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-center font-bold text-base"
+                                    value={questionData[q.id].score}
+                                    onChange={(e) => setQuestionData({...questionData, [q.id]: { ...questionData[q.id], score: Number(e.target.value) }})}
+                                  />
+                                </div>
+                              </div>
+                              <div className="text-xs text-slate-400 mb-2 italic">Nhập 0 nếu bỏ qua câu hỏi này.</div>
+                              <textarea
+                                rows={2}
+                                className="w-full rounded-lg border border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-sm placeholder:text-slate-400"
+                                placeholder="Ghi chú thêm về câu trả lời..."
+                                value={questionData[q.id].note}
+                                onChange={(e) => setQuestionData({...questionData, [q.id]: { ...questionData[q.id], note: e.target.value }})}
+                              ></textarea>
+                            </div>
+                          ))}
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { label: 'Thái độ & Tác phong', val: attitude, set: setAttitude },
@@ -515,9 +552,9 @@ export default function InterviewerView() {
                         </div>
 
                         <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
-                          <label className="font-bold text-slate-700 text-base">Tổng điểm trung bình:</label>
+                          <label className="font-bold text-slate-700 text-base">Điểm tổng (70% Câu hỏi + 30% Chung):</label>
                           <span className="text-2xl font-black text-indigo-600 bg-indigo-50 px-5 py-1.5 rounded-xl border border-indigo-100 shadow-inner">
-                            {((Number(attitude) + Number(skill) + Number(problemSolving)) / 3).toFixed(1)}
+                            {finalScore}
                           </span>
                         </div>
 
