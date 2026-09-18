@@ -533,7 +533,7 @@ app.post('/api/interviewer/cancel', async (req, res) => {
           checkInTime: new Date(0) 
         } 
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!candidate) return res.status(400).json({ success: false, message: 'Ứng viên không trong trạng thái đang gọi/phỏng vấn' });
 
@@ -563,7 +563,7 @@ app.post('/api/interviewer/call', async (req, res) => {
     const candidate = await Candidate.findOneAndUpdate(
       { interviewCode, status: 'waiting', department: interviewer.department },
       { $set: { status: 'moving', assignedRoom: interviewer.roomNumber, assignedTable: interviewer.tableNumber } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!candidate) return res.status(400).json({ success: false, message: 'Candidate no longer available in your department' });
 
