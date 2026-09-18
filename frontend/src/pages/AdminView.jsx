@@ -72,11 +72,15 @@ export default function AdminView() {
   const [showTablePrompt, setShowTablePrompt] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
-  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const [user, setUser] = React.useState(() => JSON.parse(localStorage.getItem('user')) || {});
+  const [isLoaded, setIsLoaded] = React.useState(false);
   const isSuperAdmin = user.role === 'admin' || (user.roles && user.roles.includes('admin')) || user.fullName === 'Phạm Việt Bách' || user.username === 'Phạm Việt Bách';
   const [viewDepartment, setViewDepartment] = useState(user.department || 'TCKT');
 
   useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('user'));
+    if (stored) setUser(stored);
+    setIsLoaded(true);
     socketRef.current = io('/');
     fetchBoard();
     const interval = setInterval(fetchBoard, 3000);

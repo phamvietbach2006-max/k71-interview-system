@@ -65,10 +65,15 @@ export default function ReceptionistView() {
   const [activeTab, setActiveTab] = useState('board'); // board, candidates
   const [newCandidate, setNewCandidate] = useState({ interviewCode: '', fullName: '' });
 
-  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const [user, setUser] = React.useState(() => JSON.parse(localStorage.getItem('user')) || {});
+  const [isLoaded, setIsLoaded] = React.useState(false);
   const viewDepartment = user.department || 'TCKT';
 
   useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('user'));
+    if (stored) setUser(stored);
+    setIsLoaded(true);
+    
     socketRef.current = io('/');
     fetchBoard();
     const interval = setInterval(fetchBoard, 3000);
@@ -134,12 +139,13 @@ export default function ReceptionistView() {
 
   const filteredCandidates = candidates.filter(c => c.department === viewDepartment || (!c.department && viewDepartment === 'TCKT'));
 
-    useEffect(() => {
-    if (!user.username || user.role !== 'receptionist') {
+  useEffect(() => {
+    if (isLoaded && (!user.username || user.role !== 'receptionist')) {
       navigate('/');
     }
-  }, [user.username, user.role, navigate]);
+  }, [isLoaded, user, navigate]);
 
+  if (!isLoaded) return null;
   if (!user.username || user.role !== 'receptionist') return null;
 
   return (

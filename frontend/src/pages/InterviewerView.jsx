@@ -70,6 +70,7 @@ export default function InterviewerView() {
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [showQueueModal, setShowQueueModal] = useState(false);
   const [autoAssign, setAutoAssign] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false); // track if localStorage has been read
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('user'));
@@ -78,6 +79,7 @@ export default function InterviewerView() {
       setAutoAssign(stored.autoAssign === true);
       fetchBoard();
     }
+    setIsLoaded(true); // done reading localStorage
     
     socketRef.current = io('/');
     socketRef.current.on('board_update', () => {
@@ -262,11 +264,15 @@ export default function InterviewerView() {
 
   
   useEffect(() => {
-    if (!user) {
+    // Only redirect after we've confirmed localStorage has been read
+    // Without isLoaded, this fires immediately on mount when user=null (race condition)
+    if (isLoaded && !user) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [isLoaded, user, navigate]);
 
+  // Show nothing while loading from localStorage (prevents flash redirect)
+  if (!isLoaded) return null;
   if (!user) return null;
   if (!user.tableNumber || !user.roomNumber) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-slate-50">
