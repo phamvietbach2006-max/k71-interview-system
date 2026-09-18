@@ -1,6 +1,5 @@
 import Swal from 'sweetalert2';
 import React, { useState, useEffect, useRef } from 'react';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2, List } from 'lucide-react';
 import io from 'socket.io-client';
@@ -72,15 +71,11 @@ export default function AdminView() {
   const [showTablePrompt, setShowTablePrompt] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
-  const [user, setUser] = React.useState(() => JSON.parse(localStorage.getItem('user')) || {});
-  const [isLoaded, setIsLoaded] = React.useState(false);
+  const user = JSON.parse(localStorage.getItem('user')) || {};
   const isSuperAdmin = user.role === 'admin' || (user.roles && user.roles.includes('admin')) || user.fullName === 'Phạm Việt Bách' || user.username === 'Phạm Việt Bách';
   const [viewDepartment, setViewDepartment] = useState(user.department || 'TCKT');
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('user'));
-    if (stored) setUser(stored);
-    setIsLoaded(true);
     socketRef.current = io('/');
     fetchBoard();
     const interval = setInterval(fetchBoard, 3000);
@@ -166,7 +161,7 @@ export default function AdminView() {
   const handleAddCandidate = async (e) => {
     e.preventDefault();
     if (!newCandidate.interviewCode || !newCandidate.fullName) return toast.error('Vui lòng điền đủ Mã Ứng Viên và Họ Tên');
-    const res = await fetch('/api/candidates/add', {
+    const res = await fetch('/api/candidates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newCandidate)
@@ -240,28 +235,17 @@ export default function AdminView() {
   };
 
   const handleDeleteUser = async (username) => {
-    const confirmResult = await Swal.fire({
-      title: 'Xác nhận xóa',
-      text: `Bạn có chắc muốn xóa tài khoản "${username}" không? Hành động này không thể hoàn tác.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Xóa',
-      cancelButtonText: 'Hủy'
-    });
-    if (!confirmResult.isConfirmed) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa tài khoản ${username} không?`)) return;
     try {
       const res = await fetch(`/api/users/${username}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        toast.success('Đã xóa tài khoản thành công!');
         fetchUsers();
       } else {
-        toast.error(data.error || 'Lỗi khi xóa');
+        toast(data.error);
       }
     } catch (err) {
-      toast.error(err.message);
+      toast(err.message);
     }
   };
 

@@ -6,20 +6,6 @@ import { io } from 'socket.io-client';
 import { Coffee, User, CheckCircle, Save, MessageSquare, UserCheck, Loader2, RefreshCw, Hand, X, XCircle, LogOut } from 'lucide-react';
 import ChatWidget from '../components/ChatWidget';
 
-const INTERVIEW_QUESTIONS = [
-  { id: 'q1', text: "Giới thiệu bản thân? (Yêu cầu ứng viên giới thiệu thông tin cơ bản)" },
-  { id: 'q2', text: "Theo em, điểm mạnh và điểm yếu của bản thân em là gì? Bằng cách nào điểm mạnh/ điểm yếu ấy lại phù hợp với Ban TCKT?" },
-  { id: 'q3', text: "Em có đang đăng ký tham gia vào CLB/ Tổ chức nào khác không?\n- Nếu ứng viên trả lời \"Có\" => Em sẽ sắp xếp thời gian tham gia hoạt động của Ban như thế nào để cân bằng việc học và khối lượng HĐNK khá nhiều như vậy?\n- Nếu ứng viên trả lời \"Không\" => Em sẽ sắp sẽ sắp xếp thời gian tham gia hoạt động của Ban như thế nào để cân bằng việc học và hiệu quả công việc của Ban?" },
-  { id: 'q4', text: "Đặt câu hỏi sâu về các vị trí/ HĐNK mà ứng viên đã tham gia?\n- Với các ứng viên đã có HĐNK C3 => VD: Em đã đóng góp gì, học hỏi được gì từ vị trí đó? Những kinh nghiệm ấy phù hợp như thế nào với Ban TCKT" },
-  { id: 'q5', text: "Câu hỏi góc nhìn: Các bạn phỏng vấn check theo câu trả lời cho câu hỏi sau trên đơn của ứng viên: Bạn hiểu gì về tính chất công việc của những hoạt động đó?\nVD: Theo em, tỉ mỉ và cẩn thận có phải là khái niệm chuẩn xác nhất để định nghĩa ban TCKT?" },
-  { id: 'q6', text: "Câu hỏi tình huống: Phổ biến sơ qua về DHCD của TCKT với ứng viên trước khi hỏi.\n=> Gỉa sử em tham gia đại hội CĐ của Chi đoàn A trong vai trò của Đại diện TCKT Đoàn ĐH, một số Đoàn viên Chi đoàn có dấu hiệu không chấp hành, cợt nhả, thậm chí là xúc phạm đại biểu của TCKT, em sẽ làm gì?" },
-  { id: 'q7', text: "Câu hỏi tình huống 2: Gỉa sử có giảng viên tham gia buổi họp, đại diện Đoàn trường từ chối dừng/ hủy buổi họp, em sẽ xử lý ra sao?" },
-  { id: 'q8', text: "Em có xác định hoạt động lâu dài hay không?" },
-  { id: 'q9', text: "Dành cho Sinh viên năm 2:\n- Năm nhất em đã có những trải nghiệm gì?\n- Em nghĩ bản thân có ưu điểm gì hơn so với các bạn sinh viên năm nhất?\n- Em có thể đóng góp gì cho Ban từ những trải nghiệm ấy?" },
-  { id: 'q10', text: "CÂU HỎI CUỐI: Em có câu hỏi gì cho Ban không?" }
-];
-
-
 export default function InterviewerView() {
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -81,17 +67,9 @@ export default function InterviewerView() {
   const [problemSolving, setProblemSolving] = useState(5);
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState('Đạt');
-  const [questionData, setQuestionData] = useState({
-    q1: { score: 0, note: '' }, q2: { score: 0, note: '' },
-    q3: { score: 0, note: '' }, q4: { score: 0, note: '' },
-    q5: { score: 0, note: '' }, q6: { score: 0, note: '' },
-    q7: { score: 0, note: '' }, q8: { score: 0, note: '' },
-    q9: { score: 0, note: '' }, q10: { score: 0, note: '' }
-  });
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [showQueueModal, setShowQueueModal] = useState(false);
   const [autoAssign, setAutoAssign] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false); // track if localStorage has been read
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('user'));
@@ -100,7 +78,6 @@ export default function InterviewerView() {
       setAutoAssign(stored.autoAssign === true);
       fetchBoard();
     }
-    setIsLoaded(true); // done reading localStorage
     
     socketRef.current = io('/');
     socketRef.current.on('board_update', () => {
@@ -124,8 +101,8 @@ export default function InterviewerView() {
       const roomNum = user?.roomNumber || stored?.roomNumber;
       
       const candidate = all.find(c => 
-        String(c.assignedTable || '').trim() === String(tableNum || '').trim() && 
-        String(c.assignedRoom || '').trim() === String(roomNum || '').trim() &&
+        c.assignedTable === String(tableNum) && 
+        c.assignedRoom === String(roomNum) &&
         (c.status === 'moving' || c.status === 'interviewing')
       );
       
@@ -242,77 +219,34 @@ export default function InterviewerView() {
 
   const submitEvaluation = async () => {
     if (!currentCandidate) return;
-    
-    const confirmed = await Swal.fire({
-      title: 'Xác nhận lưu đánh giá',
-      text: `Bạn có chắc muốn lưu kết quả phỏng vấn cho ứng viên ${currentCandidate.interviewCode}?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Lưu',
-      cancelButtonText: 'Kiểm tra lại'
-    });
-    if (!confirmed.isConfirmed) return;
-    
-
-    const isTCKTSubmit = (currentCandidate?.department || user?.department) === 'TCKT';
-    const questionsArray = isTCKTSubmit ? INTERVIEW_QUESTIONS.map(q => ({
-      questionText: q.text,
-      score: questionData[q.id].score,
-      note: questionData[q.id].note
-    })) : [];
-    
-    // Tính điểm
-    const answeredQuestions = Object.values(questionData).filter(q => q.score > 0);
-    const avgQuestions = answeredQuestions.length > 0 
-      ? answeredQuestions.reduce((sum, q) => sum + q.score, 0) / answeredQuestions.length 
-      : 0;
-    const avgGeneral = (attitude + skill + problemSolving) / 3;
-    const totalScore = parseFloat(((avgQuestions * 0.7) + (avgGeneral * 0.3)).toFixed(2));
-
-    const payload = {
+    const data = {
       interviewCode: currentCandidate.interviewCode,
       department: currentCandidate.department || user.department,
       interviewerUsername: user.username,
       attitudeScore: attitude,
       skillScore: skill,
       problemSolvingScore: problemSolving,
-      questions: questionsArray,
-      totalScore: totalScore,
       notes,
       result
     };
     
-    try {
-      const res = await fetch('/api/evaluation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAttitude(5); setSkill(5); setProblemSolving(5); setNotes(''); setResult('Đạt');
-        setQuestionData({ q1: { score: 0, note: '' }, q2: { score: 0, note: '' }, q3: { score: 0, note: '' }, q4: { score: 0, note: '' }, q5: { score: 0, note: '' }, q6: { score: 0, note: '' }, q7: { score: 0, note: '' }, q8: { score: 0, note: '' }, q9: { score: 0, note: '' }, q10: { score: 0, note: '' } });
-        setCurrentCandidate(null);
-        Swal.fire({ title: 'Đã lưu!', text: 'Kết quả phỏng vấn đã được ghi lại.', icon: 'success', timer: 2000, showConfirmButton: false });
-      } else {
-        Swal.fire({ title: 'Lỗi!', text: data.error || 'Không thể lưu đánh giá. Vui lòng thử lại.', icon: 'error' });
-      }
-    } catch (err) {
-      Swal.fire({ title: 'Lỗi mạng!', text: 'Mất kết nối. Vui lòng kiểm tra internet và thử lại.', icon: 'error' });
-    }
+    await fetch('/api/evaluation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    setAttitude(5); setSkill(5); setProblemSolving(5); setNotes(''); setResult('Đạt');
+    setCurrentCandidate(null);
   };
 
   
   useEffect(() => {
-    // Only redirect after we've confirmed localStorage has been read
-    // Without isLoaded, this fires immediately on mount when user=null (race condition)
-    if (isLoaded && !user) {
+    if (!user) {
       navigate('/');
     }
-  }, [isLoaded, user, navigate]);
+  }, [navigate]);
 
-  // Show nothing while loading from localStorage (prevents flash redirect)
-  if (!isLoaded) return null;
   if (!user) return null;
   if (!user.tableNumber || !user.roomNumber) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-slate-50">
@@ -322,16 +256,6 @@ export default function InterviewerView() {
     </div>
   );
 
-
-  const isTCKT = (currentCandidate?.department || user?.department) === 'TCKT';
-  const answeredQuestions = Object.values(questionData).filter(q => q.score > 0);
-  const avgQuestions = answeredQuestions.length > 0 
-    ? answeredQuestions.reduce((sum, q) => sum + q.score, 0) / answeredQuestions.length 
-    : 0;
-  const avgGeneral = (Number(attitude) + Number(skill) + Number(problemSolving)) / 3;
-  const finalScore = isTCKT 
-    ? ((avgQuestions * 0.7) + (avgGeneral * 0.3)).toFixed(2)
-    : avgGeneral.toFixed(2);
 
   return (
     <div className="min-h-screen relative overflow-hidden p-4 md:p-8 font-sans flex flex-col items-center">
@@ -492,39 +416,7 @@ export default function InterviewerView() {
                       </div>
 
                       {/* Right 1/2: Evaluation Form */}
-                      <div className="xl:w-1/2 space-y-5 flex flex-col">
-
-                        {/* Interview Questions Section - ONLY FOR TCKT */}
-                        {isTCKT && (
-                        <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-4">
-                          <h3 className="font-bold text-slate-700 text-lg border-b pb-2">Danh sách Câu hỏi Phỏng vấn</h3>
-                          {INTERVIEW_QUESTIONS.map((q) => (
-                            <div key={q.id} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                              <div className="flex justify-between items-start mb-3">
-                                <label className="text-sm font-bold text-slate-700 flex-1 pr-4 leading-relaxed whitespace-pre-wrap">{q.text}</label>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <span className="text-xs text-slate-500 font-bold whitespace-nowrap">Điểm:</span>
-                                  <input 
-                                    type="number" min="0" max="10" 
-                                    className="w-14 h-8 border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 text-center font-bold text-base"
-                                    value={questionData[q.id].score}
-                                    onChange={(e) => setQuestionData({...questionData, [q.id]: { ...questionData[q.id], score: Number(e.target.value) }})}
-                                  />
-                                </div>
-                              </div>
-                              <div className="text-xs text-slate-400 mb-2 italic">Nhập 0 nếu bỏ qua câu hỏi này.</div>
-                              <textarea
-                                rows={2}
-                                className="w-full rounded-lg border border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-sm placeholder:text-slate-400"
-                                placeholder="Ghi chú thêm về câu trả lời..."
-                                value={questionData[q.id].note}
-                                onChange={(e) => setQuestionData({...questionData, [q.id]: { ...questionData[q.id], note: e.target.value }})}
-                              ></textarea>
-                            </div>
-                          ))}
-                        </div>
-                        )}
-
+                      <div className="xl:w-1/2 space-y-5 flex flex-col justify-between">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
                             { label: 'Thái độ & Tác phong', val: attitude, set: setAttitude },
@@ -554,14 +446,14 @@ export default function InterviewerView() {
                           <textarea 
                             value={notes} onChange={e=>setNotes(e.target.value)} 
                             placeholder="Ghi chú thêm về ứng viên..."
-                            className="w-full flex-1 border border-slate-200 rounded-xl p-3 bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none transition-all font-medium text-slate-700"
+                            className="w-full min-h-[150px] flex-1 border border-slate-200 rounded-xl p-3 bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none transition-all font-medium text-slate-700"
                           ></textarea>
                         </div>
 
                         <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
-                          <label className="font-bold text-slate-700 text-base">{isTCKT ? 'Điểm tổng (70% Câu hỏi + 30% Chung):' : 'Tổng điểm trung bình:'}</label>
+                          <label className="font-bold text-slate-700 text-base">Tổng điểm trung bình:</label>
                           <span className="text-2xl font-black text-indigo-600 bg-indigo-50 px-5 py-1.5 rounded-xl border border-indigo-100 shadow-inner">
-                            {finalScore}
+                            {((Number(attitude) + Number(skill) + Number(problemSolving)) / 3).toFixed(1)}
                           </span>
                         </div>
 
