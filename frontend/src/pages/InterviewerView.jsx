@@ -82,10 +82,10 @@ export default function InterviewerView() {
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState('Đạt');
   const [questionData, setQuestionData] = useState({
-    q1: { score: 5, note: '' }, q2: { score: 5, note: '' },
-    q3: { score: 5, note: '' }, q4: { score: 5, note: '' },
-    q5: { score: 5, note: '' }, q6: { score: 5, note: '' },
-    q7: { score: 5, note: '' }, q8: { score: 5, note: '' },
+    q1: { score: 0, note: '' }, q2: { score: 0, note: '' },
+    q3: { score: 0, note: '' }, q4: { score: 0, note: '' },
+    q5: { score: 0, note: '' }, q6: { score: 0, note: '' },
+    q7: { score: 0, note: '' }, q8: { score: 0, note: '' },
     q9: { score: 0, note: '' }, q10: { score: 0, note: '' }
   });
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
@@ -291,7 +291,7 @@ export default function InterviewerView() {
       const data = await res.json();
       if (data.success) {
         setAttitude(5); setSkill(5); setProblemSolving(5); setNotes(''); setResult('Đạt');
-        setQuestionData({ q1: { score: 5, note: '' }, q2: { score: 5, note: '' }, q3: { score: 5, note: '' }, q4: { score: 5, note: '' }, q5: { score: 5, note: '' }, q6: { score: 5, note: '' }, q7: { score: 5, note: '' }, q8: { score: 5, note: '' }, q9: { score: 0, note: '' }, q10: { score: 0, note: '' } });
+        setQuestionData({ q1: { score: 0, note: '' }, q2: { score: 0, note: '' }, q3: { score: 0, note: '' }, q4: { score: 0, note: '' }, q5: { score: 0, note: '' }, q6: { score: 0, note: '' }, q7: { score: 0, note: '' }, q8: { score: 0, note: '' }, q9: { score: 0, note: '' }, q10: { score: 0, note: '' } });
         setCurrentCandidate(null);
         Swal.fire({ title: 'Đã lưu!', text: 'Kết quả phỏng vấn đã được ghi lại.', icon: 'success', timer: 2000, showConfirmButton: false });
       } else {
