@@ -7,13 +7,16 @@ import { Coffee, User, CheckCircle, Save, MessageSquare, UserCheck, Loader2, Ref
 import ChatWidget from '../components/ChatWidget';
 
 const INTERVIEW_QUESTIONS = [
-  { id: 'q1', text: "1. Giới thiệu bản thân? (Thông tin cơ bản)" },
-  { id: 'q2', text: "2. Theo em, điểm mạnh và điểm yếu của bản thân em là gì? Bằng cách nào điểm mạnh/ điểm yếu ấy lại phù hợp với Ban TCKT?" },
-  { id: 'q3', text: "3. Sắp xếp thời gian cân bằng việc học và hoạt động Ban/HĐNK?" },
-  { id: 'q4', text: "4. Kinh nghiệm từ HĐNK đã tham gia và sự phù hợp với Ban TCKT?" },
-  { id: 'q5', text: "5. Góc nhìn: Bạn hiểu gì về tính chất công việc của Ban TCKT?" },
-  { id: 'q6', text: "6. Câu hỏi tình huống: Đại hội Chi đoàn / Thầy cô / Hoạt động lâu dài" },
-  { id: 'q7', text: "7. Dành cho SV năm 2: Trải nghiệm năm nhất, ưu điểm và đóng góp?" }
+  { id: 'q1', text: "Giới thiệu bản thân? (Yêu cầu ứng viên giới thiệu thông tin cơ bản)" },
+  { id: 'q2', text: "Theo em, điểm mạnh và điểm yếu của bản thân em là gì? Bằng cách nào điểm mạnh/ điểm yếu ấy lại phù hợp với Ban TCKT?" },
+  { id: 'q3', text: "Em có đang đăng ký tham gia vào CLB/ Tổ chức nào khác không?\n- Nếu ứng viên trả lời \"Có\" => Em sẽ sắp xếp thời gian tham gia hoạt động của Ban như thế nào để cân bằng việc học và khối lượng HĐNK khá nhiều như vậy?\n- Nếu ứng viên trả lời \"Không\" => Em sẽ sắp sẽ sắp xếp thời gian tham gia hoạt động của Ban như thế nào để cân bằng việc học và hiệu quả công việc của Ban?" },
+  { id: 'q4', text: "Đặt câu hỏi sâu về các vị trí/ HĐNK mà ứng viên đã tham gia?\n- Với các ứng viên đã có HĐNK C3 => VD: Em đã đóng góp gì, học hỏi được gì từ vị trí đó? Những kinh nghiệm ấy phù hợp như thế nào với Ban TCKT" },
+  { id: 'q5', text: "Câu hỏi góc nhìn: Các bạn phỏng vấn check theo câu trả lời cho câu hỏi sau trên đơn của ứng viên: Bạn hiểu gì về tính chất công việc của những hoạt động đó?\nVD: Theo em, tỉ mỉ và cẩn thận có phải là khái niệm chuẩn xác nhất để định nghĩa ban TCKT?" },
+  { id: 'q6', text: "Câu hỏi tình huống: Phổ biến sơ qua về DHCD của TCKT với ứng viên trước khi hỏi.\n=> Gỉa sử em tham gia đại hội CĐ của Chi đoàn A trong vai trò của Đại diện TCKT Đoàn ĐH, một số Đoàn viên Chi đoàn có dấu hiệu không chấp hành, cợt nhả, thậm chí là xúc phạm đại biểu của TCKT, em sẽ làm gì?" },
+  { id: 'q7', text: "Câu hỏi tình huống 2: Gỉa sử có giảng viên tham gia buổi họp, đại diện Đoàn trường từ chối dừng/ hủy buổi họp, em sẽ xử lý ra sao?" },
+  { id: 'q8', text: "Em có xác định hoạt động lâu dài hay không?" },
+  { id: 'q9', text: "Dành cho Sinh viên năm 2:\n- Năm nhất em đã có những trải nghiệm gì?\n- Em nghĩ bản thân có ưu điểm gì hơn so với các bạn sinh viên năm nhất?\n- Em có thể đóng góp gì cho Ban từ những trải nghiệm ấy?" },
+  { id: 'q10', text: "CÂU HỎI CUỐI: Em có câu hỏi gì cho Ban không?" }
 ];
 
 
@@ -79,13 +82,11 @@ export default function InterviewerView() {
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState('Đạt');
   const [questionData, setQuestionData] = useState({
-    q1: { score: 5, note: '' },
-    q2: { score: 5, note: '' },
-    q3: { score: 5, note: '' },
-    q4: { score: 5, note: '' },
-    q5: { score: 5, note: '' },
-    q6: { score: 5, note: '' },
-    q7: { score: 0, note: '' }
+    q1: { score: 5, note: '' }, q2: { score: 5, note: '' },
+    q3: { score: 5, note: '' }, q4: { score: 5, note: '' },
+    q5: { score: 5, note: '' }, q6: { score: 5, note: '' },
+    q7: { score: 5, note: '' }, q8: { score: 5, note: '' },
+    q9: { score: 0, note: '' }, q10: { score: 0, note: '' }
   });
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [showQueueModal, setShowQueueModal] = useState(false);
@@ -290,7 +291,7 @@ export default function InterviewerView() {
       const data = await res.json();
       if (data.success) {
         setAttitude(5); setSkill(5); setProblemSolving(5); setNotes(''); setResult('Đạt');
-        setQuestionData({ q1: { score: 5, note: '' }, q2: { score: 5, note: '' }, q3: { score: 5, note: '' }, q4: { score: 5, note: '' }, q5: { score: 5, note: '' }, q6: { score: 5, note: '' }, q7: { score: 0, note: '' } });
+        setQuestionData({ q1: { score: 5, note: '' }, q2: { score: 5, note: '' }, q3: { score: 5, note: '' }, q4: { score: 5, note: '' }, q5: { score: 5, note: '' }, q6: { score: 5, note: '' }, q7: { score: 5, note: '' }, q8: { score: 5, note: '' }, q9: { score: 0, note: '' }, q10: { score: 0, note: '' } });
         setCurrentCandidate(null);
         Swal.fire({ title: 'Đã lưu!', text: 'Kết quả phỏng vấn đã được ghi lại.', icon: 'success', timer: 2000, showConfirmButton: false });
       } else {
@@ -462,7 +463,7 @@ export default function InterviewerView() {
                   {currentCandidate.status === 'interviewing' && (
                     <div className="flex flex-col xl:flex-row gap-8">
                       {/* Left 1/2: Candidate Data */}
-                      <div className="xl:w-1/2 bg-blue-50/50 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-sm h-[70vh] overflow-y-auto custom-scrollbar">
+                      <div className="xl:w-1/2 bg-blue-50/50 backdrop-blur-sm p-6 rounded-2xl border border-blue-100/50 shadow-sm">
                         <h3 className="font-bold text-blue-900 mb-4 border-b border-blue-200/50 pb-3 text-xl tracking-tight">Thông tin Ứng viên</h3>
                         <div className="space-y-3">
                           {currentCandidate.applicationData && Object.keys(currentCandidate.applicationData).length > 0 ? (
@@ -500,7 +501,7 @@ export default function InterviewerView() {
                           {INTERVIEW_QUESTIONS.map((q) => (
                             <div key={q.id} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                               <div className="flex justify-between items-start mb-3">
-                                <label className="text-sm font-bold text-slate-700 flex-1 pr-4 leading-relaxed">{q.text}</label>
+                                <label className="text-sm font-bold text-slate-700 flex-1 pr-4 leading-relaxed whitespace-pre-wrap">{q.text}</label>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <span className="text-xs text-slate-500 font-bold whitespace-nowrap">Điểm:</span>
                                   <input 
