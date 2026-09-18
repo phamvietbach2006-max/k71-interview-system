@@ -57,6 +57,7 @@ export default function InterviewerView() {
     }
   };
   const [user, setUser] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [currentCandidate, setCurrentCandidate] = useState(null);
   const [isBreak, setIsBreak] = useState(false);
   const socketRef = useRef(null);
@@ -78,6 +79,7 @@ export default function InterviewerView() {
       setAutoAssign(stored.autoAssign === true);
       fetchBoard();
     }
+    setIsLoaded(true);
     
     socketRef.current = io('/');
     socketRef.current.on('board_update', () => {
@@ -242,10 +244,10 @@ export default function InterviewerView() {
 
   
   useEffect(() => {
-    if (!user) {
+    if (isLoaded && !user) {
       navigate('/');
     }
-  }, [navigate]);
+  }, [isLoaded, user, navigate]);
 
   if (!user) return null;
   if (!user.tableNumber || !user.roomNumber) return (
