@@ -1,5 +1,6 @@
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2, List } from 'lucide-react';
@@ -316,25 +317,45 @@ export default function AdminView() {
   const filteredEvaluations = evaluations.filter(e => e.department === viewDepartment || (!e.department && viewDepartment === 'TCKT'));
   const filteredCandidates = candidates.filter(c => c.department === viewDepartment || (!c.department && viewDepartment === 'TCKT'));
 
-  const exportCSV = () => {
-    if (filteredEvaluations.length === 0) return;
+    const exportToExcel = () => {
+    if (filteredEvaluations.length === 0) return toast.error('Không có dữ liệu để xuất');
     
-    const headers = ['Ứng viên', 'Người PV', 'Thái độ', 'Kỹ năng', 'Xử lý TH', 'Ghi chú', 'Kết quả'];
-    const rows = filteredEvaluations.map(e => [
-      `"${e.candidateName || e.interviewCode}"`, `"${e.interviewerName || e.interviewerUsername}"`, e.attitudeScore, e.skillScore, e.problemSolvingScore, `"${e.notes || ''}"`, e.result
-    ]);
+    const dataToExport = filteredEvaluations.map((e, index) => {
+      const avg = ((e.attitudeScore + e.skillScore + e.problemSolvingScore) / 3).toFixed(1);
+      return {
+        'STT': index + 1,
+        'MSSV / Tên Ứng viên': e.candidateName || e.interviewCode,
+        'Người Phỏng vấn': e.interviewerName || e.interviewerUsername,
+        'Thái độ & Tác phong': e.attitudeScore,
+        'Kỹ năng chuyên môn': e.skillScore,
+        'Xử lý tình huống': e.problemSolvingScore,
+        'Điểm Trung bình': parseFloat(avg),
+        'Kết quả': e.result,
+        'Ghi chú / Nhận xét': e.notes || ''
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
-      + headers.join(',') + '\n' 
-      + rows.map(e => e.join(',')).join('\n');
-      
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Danh_gia_phong_van_${viewDepartment}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Auto-size columns
+    const wscols = [
+      { wch: 5 }, // STT
+      { wch: 25 }, // Candidate
+      { wch: 25 }, // Interviewer
+      { wch: 20 }, // Attitude
+      { wch: 20 }, // Skill
+      { wch: 20 }, // Problem
+      { wch: 15 }, // Avg
+      { wch: 15 }, // Result
+      { wch: 50 }, // Notes
+    ];
+    worksheet['!cols'] = wscols;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "KetQuaPhongVan");
+    
+    XLSX.writeFile(workbook, `Ket_Qua_Phong_Van_${viewDepartment}.xlsx`);
+    toast.success('Đã xuất file Excel thành công!');
   };
 
   
@@ -499,7 +520,7 @@ export default function AdminView() {
             )}
             
             {activeTab === 'evaluations' && (
-              <button onClick={exportCSV} className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2">
+              <button onClick={exportToExcel} className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2">
                 <Download size={16} /> Xuất Excel
               </button>
             )}
@@ -581,8 +602,8 @@ export default function AdminView() {
                   <h2 className="text-3xl font-black text-slate-800 tracking-tight">Dữ Liệu Đánh Giá</h2>
                   <p className="text-slate-500 mt-2 font-medium">Danh sách tất cả kết quả đánh giá của ứng viên</p>
                 </div>
-                <button onClick={exportCSV} className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
-                  <Download size={18} strokeWidth={2.5} /> Xuất Excel (CSV)
+                <button onClick={exportToExcel} className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
+                  <Download size={18} strokeWidth={2.5} /> Xuất Excel
                 </button>
               </div>
 
