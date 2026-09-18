@@ -1,7 +1,7 @@
 import Swal from 'sweetalert2';
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { LogOut, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Users, Monitor, List, CheckCircle, RefreshCw } from 'lucide-react';
 import io from 'socket.io-client';
 import Board from './Board';
@@ -98,7 +98,7 @@ export default function ReceptionistView() {
     });
   };
 
-  const handleManualCheckIn = () => {
+  const handleManualCheckIn = async () => {
     const { value: code } = await Swal.fire({
       title: 'Check-in Ứng viên',
       input: 'text',
