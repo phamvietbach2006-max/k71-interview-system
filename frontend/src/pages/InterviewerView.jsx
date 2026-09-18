@@ -6,6 +6,17 @@ import { io } from 'socket.io-client';
 import { Coffee, User, CheckCircle, Save, MessageSquare, UserCheck, Loader2, RefreshCw, Hand, X, XCircle, LogOut } from 'lucide-react';
 import ChatWidget from '../components/ChatWidget';
 
+const INTERVIEW_QUESTIONS = [
+  { id: 'q1', text: "1. Giới thiệu bản thân? (Thông tin cơ bản)" },
+  { id: 'q2', text: "2. Theo em, điểm mạnh và điểm yếu của bản thân em là gì? Bằng cách nào điểm mạnh/ điểm yếu ấy lại phù hợp với Ban TCKT?" },
+  { id: 'q3', text: "3. Sắp xếp thời gian cân bằng việc học và hoạt động Ban/HĐNK?" },
+  { id: 'q4', text: "4. Kinh nghiệm từ HĐNK đã tham gia và sự phù hợp với Ban TCKT?" },
+  { id: 'q5', text: "5. Góc nhìn: Bạn hiểu gì về tính chất công việc của Ban TCKT?" },
+  { id: 'q6', text: "6. Câu hỏi tình huống: Đại hội Chi đoàn / Thầy cô / Hoạt động lâu dài" },
+  { id: 'q7', text: "7. Dành cho SV năm 2: Trải nghiệm năm nhất, ưu điểm và đóng góp?" }
+];
+
+
 export default function InterviewerView() {
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -67,6 +78,15 @@ export default function InterviewerView() {
   const [problemSolving, setProblemSolving] = useState(5);
   const [notes, setNotes] = useState('');
   const [result, setResult] = useState('Đạt');
+  const [questionData, setQuestionData] = useState({
+    q1: { score: 5, note: '' },
+    q2: { score: 5, note: '' },
+    q3: { score: 5, note: '' },
+    q4: { score: 5, note: '' },
+    q5: { score: 5, note: '' },
+    q6: { score: 5, note: '' },
+    q7: { score: 0, note: '' }
+  });
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
   const [showQueueModal, setShowQueueModal] = useState(false);
   const [autoAssign, setAutoAssign] = useState(false);
@@ -232,6 +252,21 @@ export default function InterviewerView() {
     });
     if (!confirmed.isConfirmed) return;
     
+
+    const questionsArray = INTERVIEW_QUESTIONS.map(q => ({
+      questionText: q.text,
+      score: questionData[q.id].score,
+      note: questionData[q.id].note
+    }));
+    
+    // Tính điểm
+    const answeredQuestions = Object.values(questionData).filter(q => q.score > 0);
+    const avgQuestions = answeredQuestions.length > 0 
+      ? answeredQuestions.reduce((sum, q) => sum + q.score, 0) / answeredQuestions.length 
+      : 0;
+    const avgGeneral = (attitude + skill + problemSolving) / 3;
+    const totalScore = parseFloat(((avgQuestions * 0.7) + (avgGeneral * 0.3)).toFixed(2));
+
     const payload = {
       interviewCode: currentCandidate.interviewCode,
       department: currentCandidate.department || user.department,
@@ -239,6 +274,8 @@ export default function InterviewerView() {
       attitudeScore: attitude,
       skillScore: skill,
       problemSolvingScore: problemSolving,
+      questions: questionsArray,
+      totalScore: totalScore,
       notes,
       result
     };
@@ -252,6 +289,7 @@ export default function InterviewerView() {
       const data = await res.json();
       if (data.success) {
         setAttitude(5); setSkill(5); setProblemSolving(5); setNotes(''); setResult('Đạt');
+        setQuestionData({ q1: { score: 5, note: '' }, q2: { score: 5, note: '' }, q3: { score: 5, note: '' }, q4: { score: 5, note: '' }, q5: { score: 5, note: '' }, q6: { score: 5, note: '' }, q7: { score: 0, note: '' } });
         setCurrentCandidate(null);
         Swal.fire({ title: 'Đã lưu!', text: 'Kết quả phỏng vấn đã được ghi lại.', icon: 'success', timer: 2000, showConfirmButton: false });
       } else {

@@ -283,10 +283,12 @@ app.get('/api/tv-board', async (req, res) => {
 });
 
 app.post('/api/evaluation', async (req, res) => {
-  const { interviewCode, department, interviewerUsername, attitudeScore, skillScore, problemSolvingScore, notes, result } = req.body;
+  const { interviewCode, department, interviewerUsername, attitudeScore, skillScore, problemSolvingScore, questions, totalScore, notes, result } = req.body;
   try {
     const evaluation = new Evaluation({
-      interviewCode, department, interviewerUsername, attitudeScore, skillScore, problemSolvingScore, notes, result
+      interviewCode, department, interviewerUsername,
+      attitudeScore, skillScore, problemSolvingScore,
+      questions, totalScore, notes, result
     });
     await evaluation.save();
 

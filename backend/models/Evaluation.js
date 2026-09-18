@@ -7,6 +7,12 @@ const evaluationSchema = new mongoose.Schema({
   attitudeScore: { type: Number, min: 1, max: 10, required: true },
   skillScore: { type: Number, min: 1, max: 10, required: true },
   problemSolvingScore: { type: Number, min: 1, max: 10, required: true },
+  questions: [{
+    questionText: { type: String },
+    score: { type: Number },
+    note: { type: String }
+  }],
+  totalScore: { type: Number },
   notes: { type: String },
   result: { 
     type: String, 
