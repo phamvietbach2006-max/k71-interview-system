@@ -224,8 +224,8 @@ app.post('/api/login', async (req, res) => {
         }
 
       if (user.role === 'interviewer') {
-        if (tableNumber) user.tableNumber = tableNumber;
-        if (roomNumber) user.roomNumber = roomNumber;
+        if (tableNumber) user.tableNumber = String(tableNumber).trim();
+        if (roomNumber) user.roomNumber = String(roomNumber).trim();
         user.status = 'active';
         await user.save();
         io.emit('staff_update');
@@ -312,10 +312,19 @@ app.post('/api/staff/leave', async (req, res) => {
   try {
     const user = await User.findOne({ username });
     if (user) {
+      // Bỏ gán ứng viên hiện tại nếu đang pv dở
+      if (user.tableNumber && user.roomNumber) {
+        await Candidate.updateMany(
+          { assignedTable: user.tableNumber, assignedRoom: user.roomNumber, department: user.department, status: { $in: ['moving', 'interviewing'] } },
+          { $set: { status: 'waiting', assignedTable: null, assignedRoom: null, checkInTime: new Date(0) } }
+        );
+      }
+      
       user.tableNumber = null;
       user.roomNumber = null;
       user.status = 'active';
       await user.save();
+      io.emit('board_update');
       io.emit('staff_update');
     }
     res.json({ success: true });
@@ -569,8 +578,8 @@ app.post('/api/staff/switch-role', async (req, res) => {
 
     user.role = targetRole;
     if (targetRole === 'interviewer') {
-      if (tableNumber) user.tableNumber = tableNumber;
-      if (roomNumber) user.roomNumber = roomNumber;
+      if (tableNumber) user.tableNumber = String(tableNumber).trim();
+      if (roomNumber) user.roomNumber = String(roomNumber).trim();
     }
     await user.save();
     const newToken = jwt.sign({ id: user._id, role: user.role, roles: user.roles, username: user.username }, JWT_SECRET, { expiresIn: '12h' });

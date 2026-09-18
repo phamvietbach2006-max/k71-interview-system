@@ -1,4 +1,5 @@
 import Swal from 'sweetalert2';
+import toast from 'react-hot-toast';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2, List } from 'lucide-react';
@@ -161,7 +162,7 @@ export default function AdminView() {
   const handleAddCandidate = async (e) => {
     e.preventDefault();
     if (!newCandidate.interviewCode || !newCandidate.fullName) return toast.error('Vui lòng điền đủ Mã Ứng Viên và Họ Tên');
-    const res = await fetch('/api/candidates', {
+    const res = await fetch('/api/candidates/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newCandidate)
@@ -190,10 +191,10 @@ export default function AdminView() {
         setNewUser({ username: '', fullName: '', department: 'TCKT', roles: ['interviewer'] });
         fetchUsers();
       } else {
-        toast(data.error);
+        toast.error(data.error);
       }
     } catch (err) {
-      toast(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -234,20 +235,33 @@ export default function AdminView() {
     toast.success("Cập nhật thành công!");
   };
 
-  const handleDeleteUser = async (username) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa tài khoản ${username} không?`)) return;
-    try {
-      const res = await fetch(`/api/users/${username}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        fetchUsers();
-      } else {
-        toast(data.error);
+      const handleDeleteUser = async (username) => {
+      const result = await Swal.fire({
+        title: 'Bạn chắc chắn chứ?',
+        text: `Xóa tài khoản ${username} không thể hoàn tác!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Xóa ngay!',
+        cancelButtonText: 'Hủy'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        const res = await fetch(`/api/users/${username}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          toast.success('Đã xóa tài khoản');
+          fetchUsers();
+        } else {
+          toast.error(data.error);
+        }
+      } catch (err) {
+        toast.error(err.message);
       }
-    } catch (err) {
-      toast(err.message);
-    }
-  };
+    };
 
   const updateUserRole = async (username, currentRoles, roleToToggle) => {
     let newRoles = [...(currentRoles || [])];
