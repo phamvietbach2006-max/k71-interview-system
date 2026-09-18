@@ -101,8 +101,8 @@ export default function InterviewerView() {
       const roomNum = user?.roomNumber || stored?.roomNumber;
       
       const candidate = all.find(c => 
-        c.assignedTable === String(tableNum) && 
-        c.assignedRoom === String(roomNum) &&
+        String(c.assignedTable || '').trim() === String(tableNum || '').trim() && 
+        String(c.assignedRoom || '').trim() === String(roomNum || '').trim() &&
         (c.status === 'moving' || c.status === 'interviewing')
       );
       
@@ -219,7 +219,18 @@ export default function InterviewerView() {
 
   const submitEvaluation = async () => {
     if (!currentCandidate) return;
-    const data = {
+    
+    const confirmed = await Swal.fire({
+      title: 'Xác nhận lưu đánh giá',
+      text: `Bạn có chắc muốn lưu kết quả phỏng vấn cho ứng viên ${currentCandidate.interviewCode}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Lưu',
+      cancelButtonText: 'Kiểm tra lại'
+    });
+    if (!confirmed.isConfirmed) return;
+    
+    const payload = {
       interviewCode: currentCandidate.interviewCode,
       department: currentCandidate.department || user.department,
       interviewerUsername: user.username,
@@ -230,14 +241,23 @@ export default function InterviewerView() {
       result
     };
     
-    await fetch('/api/evaluation', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-
-    setAttitude(5); setSkill(5); setProblemSolving(5); setNotes(''); setResult('Đạt');
-    setCurrentCandidate(null);
+    try {
+      const res = await fetch('/api/evaluation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAttitude(5); setSkill(5); setProblemSolving(5); setNotes(''); setResult('Đạt');
+        setCurrentCandidate(null);
+        Swal.fire({ title: 'Đã lưu!', text: 'Kết quả phỏng vấn đã được ghi lại.', icon: 'success', timer: 2000, showConfirmButton: false });
+      } else {
+        Swal.fire({ title: 'Lỗi!', text: data.error || 'Không thể lưu đánh giá. Vui lòng thử lại.', icon: 'error' });
+      }
+    } catch (err) {
+      Swal.fire({ title: 'Lỗi mạng!', text: 'Mất kết nối. Vui lòng kiểm tra internet và thử lại.', icon: 'error' });
+    }
   };
 
   
@@ -245,7 +265,7 @@ export default function InterviewerView() {
     if (!user) {
       navigate('/');
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   if (!user) return null;
   if (!user.tableNumber || !user.roomNumber) return (

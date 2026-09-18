@@ -224,8 +224,8 @@ app.post('/api/login', async (req, res) => {
         }
 
       if (user.role === 'interviewer') {
-        if (tableNumber) user.tableNumber = tableNumber;
-        if (roomNumber) user.roomNumber = roomNumber;
+        if (tableNumber) user.tableNumber = String(tableNumber).trim();
+        if (roomNumber) user.roomNumber = String(roomNumber).trim();
         user.status = 'active';
         await user.save();
         io.emit('staff_update');
@@ -312,10 +312,30 @@ app.post('/api/staff/leave', async (req, res) => {
   try {
     const user = await User.findOne({ username });
     if (user) {
+      // If any candidate is moving/interviewing at this table, return them to waiting
+      if (user.tableNumber && user.roomNumber) {
+        await Candidate.updateMany(
+          {
+            department: user.department,
+            assignedRoom: user.roomNumber,
+            assignedTable: user.tableNumber,
+            status: { $in: ['moving', 'interviewing'] }
+          },
+          {
+            $set: {
+              status: 'waiting',
+              assignedRoom: null,
+              assignedTable: null,
+              checkInTime: new Date() // reset so they go back to front of queue-ish
+            }
+          }
+        );
+      }
       user.tableNumber = null;
       user.roomNumber = null;
       user.status = 'active';
       await user.save();
+      io.emit('board_update');
       io.emit('staff_update');
     }
     res.json({ success: true });
@@ -569,8 +589,9 @@ app.post('/api/staff/switch-role', async (req, res) => {
 
     user.role = targetRole;
     if (targetRole === 'interviewer') {
-      if (tableNumber) user.tableNumber = tableNumber;
-      if (roomNumber) user.roomNumber = roomNumber;
+      if (tableNumber) user.tableNumber = String(tableNumber).trim();
+      if (roomNumber) user.roomNumber = String(roomNumber).trim();
+      user.status = 'active';
     }
     await user.save();
     const newToken = jwt.sign({ id: user._id, role: user.role, roles: user.roles, username: user.username }, JWT_SECRET, { expiresIn: '12h' });

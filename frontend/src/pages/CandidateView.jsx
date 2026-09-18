@@ -28,6 +28,8 @@ export default function CandidateView() {
     socketRef.current = io('/');
     
     socketRef.current.on('candidate_assigned', (data) => {
+      // B2 fix: guard against stored being null
+      if (!stored) return;
       if (data.candidate.interviewCode === stored.interviewCode && data.candidate.department === stored.department) {
         setStatus('moving');
         setHasAcked(false);
