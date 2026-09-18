@@ -253,11 +253,12 @@ export default function InterviewerView() {
     if (!confirmed.isConfirmed) return;
     
 
-    const questionsArray = INTERVIEW_QUESTIONS.map(q => ({
+    const isTCKTSubmit = (currentCandidate?.department || user?.department) === 'TCKT';
+    const questionsArray = isTCKTSubmit ? INTERVIEW_QUESTIONS.map(q => ({
       questionText: q.text,
       score: questionData[q.id].score,
       note: questionData[q.id].note
-    }));
+    })) : [];
     
     // Tính điểm
     const answeredQuestions = Object.values(questionData).filter(q => q.score > 0);
@@ -321,12 +322,15 @@ export default function InterviewerView() {
   );
 
 
+  const isTCKT = (currentCandidate?.department || user?.department) === 'TCKT';
   const answeredQuestions = Object.values(questionData).filter(q => q.score > 0);
   const avgQuestions = answeredQuestions.length > 0 
     ? answeredQuestions.reduce((sum, q) => sum + q.score, 0) / answeredQuestions.length 
     : 0;
   const avgGeneral = (Number(attitude) + Number(skill) + Number(problemSolving)) / 3;
-  const finalScore = ((avgQuestions * 0.7) + (avgGeneral * 0.3)).toFixed(2);
+  const finalScore = isTCKT 
+    ? ((avgQuestions * 0.7) + (avgGeneral * 0.3)).toFixed(2)
+    : avgGeneral.toFixed(2);
 
   return (
     <div className="min-h-screen relative overflow-hidden p-4 md:p-8 font-sans flex flex-col items-center">
@@ -489,7 +493,8 @@ export default function InterviewerView() {
                       {/* Right 1/2: Evaluation Form */}
                       <div className="xl:w-1/2 space-y-5 flex flex-col h-[70vh] overflow-y-auto custom-scrollbar pr-2">
 
-                        {/* Interview Questions Section */}
+                        {/* Interview Questions Section - ONLY FOR TCKT */}
+                        {isTCKT && (
                         <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar">
                           <h3 className="font-bold text-slate-700 text-lg border-b pb-2 sticky top-0 bg-white/90 backdrop-blur-md z-10">Danh sách Câu hỏi Phỏng vấn</h3>
                           {INTERVIEW_QUESTIONS.map((q) => (
@@ -517,6 +522,7 @@ export default function InterviewerView() {
                             </div>
                           ))}
                         </div>
+                        )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           {[
@@ -552,7 +558,7 @@ export default function InterviewerView() {
                         </div>
 
                         <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
-                          <label className="font-bold text-slate-700 text-base">Điểm tổng (70% Câu hỏi + 30% Chung):</label>
+                          <label className="font-bold text-slate-700 text-base">{isTCKT ? 'Điểm tổng (70% Câu hỏi + 30% Chung):' : 'Tổng điểm trung bình:'}</label>
                           <span className="text-2xl font-black text-indigo-600 bg-indigo-50 px-5 py-1.5 rounded-xl border border-indigo-100 shadow-inner">
                             {finalScore}
                           </span>
