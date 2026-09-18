@@ -1,3 +1,4 @@
+import Swal from 'sweetalert2';
 import React, { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,11 @@ import ChatWidget from '../components/ChatWidget';
 
 export default function InterviewerView() {
   const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
 
     const performSwitchToRole = async (roleName, path) => {
     let tableNum = null;
@@ -117,7 +123,15 @@ export default function InterviewerView() {
   };
 
   const handleLeaveTable = async () => {
-    if (!window.confirm("Bạn có chắc chắn muốn rời bàn phỏng vấn? Khi đăng nhập lại bạn sẽ phải chọn lại phòng và bàn.")) return;
+    const leaveConfirm = await Swal.fire({
+      title: 'Rời bàn',
+      text: 'Bạn có chắc chắn muốn rời bàn phỏng vấn? Khi đăng nhập lại bạn sẽ phải chọn lại phòng và bàn.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Rời đi',
+      cancelButtonText: 'Huỷ'
+    });
+    if (!leaveConfirm.isConfirmed) return;
     try {
       const res = await fetch('/api/staff/leave', {
         method: 'POST',
@@ -173,8 +187,15 @@ export default function InterviewerView() {
 
   const cancelInterview = async () => {
     if (!currentCandidate) return;
-    const confirm = window.confirm('Bạn có chắc chắn muốn hủy lượt gọi và đưa ứng viên trở về hàng đợi?');
-    if (!confirm) return;
+    const confirmResult = await Swal.fire({
+        title: 'Xác nhận huỷ',
+        text: 'Bạn có chắc chắn muốn huỷ lượt gọi và đưa ứng viên trở về hàng đợi?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Huỷ lượt',
+        cancelButtonText: 'Đóng'
+      });
+      if (!confirmResult.isConfirmed) return;
 
     try {
       const res = await fetch('/api/interviewer/cancel', {

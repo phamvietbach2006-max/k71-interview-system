@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { UserCircle, LogIn, ArrowRight, UserCheck, LayoutDashboard, Hash, Monitor, User, CheckCircle2 } from 'lucide-react';
@@ -7,12 +7,21 @@ import MacBackground from '../components/MacBackground';
 export default function Login() {
   const [step, setStep] = useState(1);
   const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
   const [tableNumber, setTableNumber] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [tempUser, setTempUser] = useState(null);
   const navigate = useNavigate();
 
+  
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.role && user.role !== 'candidate_completed') {
+      navigate(`/${user.role}`);
+    }
+  }, [navigate]);
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     
@@ -169,6 +178,28 @@ export default function Login() {
             </div>
           )}
 
+          {step === 1.2 && (
+            <div className="space-y-4 animate-fade-in">
+              <label className="block text-sm font-bold text-slate-700 ml-1">
+                Nhập mật khẩu nhân sự: <span className="text-blue-500">*</span>
+              </label>
+              <div className="relative group animate-fade-in-up animation-delay-200">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <span className="font-bold">**</span>
+                </div>
+                <input 
+                  type="password" 
+                  required 
+                  placeholder="Mật khẩu mặc định: Abc@123" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-11 border-2 border-slate-200 rounded-2xl px-4 py-3.5 bg-white/50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-800 placeholder:text-slate-400"
+                />
+              </div>
+              <button type="button" onClick={() => {setStep(1); setPassword('');}} className="text-sm font-semibold text-blue-500 hover:text-blue-700 mt-2 block ml-1">&larr; Quay lại</button>
+            </div>
+          )}
+
           {step === 1.5 && (
             <div className="space-y-4 animate-fade-in">
               <label className="block text-sm font-bold text-slate-700 ml-1">
@@ -276,7 +307,7 @@ export default function Login() {
           
           {step !== 1.75 && step !== 1.8 && (
             <button type="submit" className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 mt-8 rounded-2xl font-black text-lg shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all">
-              <LogIn size={20} /> {step === 1 ? 'TIẾP TỤC' : step === 1.5 ? 'XÁC NHẬN VÀO PHÒNG CHỜ' : 'XÁC NHẬN VÀO BÀN'}
+              <LogIn size={20} /> {step === 1 ? 'TIẾP TỤC' : step === 1.2 ? 'ĐĂNG NHẬP' : step === 1.5 ? 'XÁC NHẬN VÀO PHÒNG CHỜ' : 'XÁC NHẬN VÀO BÀN'}
             </button>
           )}
         </form>

@@ -1,6 +1,7 @@
+import Swal from 'sweetalert2';
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { LogOut, useNavigate } from 'react-router-dom';
 import { Users, Monitor, List, CheckCircle, RefreshCw } from 'lucide-react';
 import io from 'socket.io-client';
 import Board from './Board';
@@ -10,6 +11,11 @@ import MacWindow from '../components/MacWindow';
 
 export default function ReceptionistView() {
   const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
 
     const performSwitchToRole = async (roleName, path) => {
     let tableNum = null;
@@ -93,7 +99,14 @@ export default function ReceptionistView() {
   };
 
   const handleManualCheckIn = () => {
-    const code = window.prompt("Nhập MSSV (hoặc Mã PV) của ứng viên để Check-in hộ:");
+    const { value: code } = await Swal.fire({
+      title: 'Check-in Ứng viên',
+      input: 'text',
+      inputLabel: 'Nhập MSSV (hoặc Mã PV) của ứng viên:',
+      showCancelButton: true,
+      confirmButtonText: 'Check-in',
+      cancelButtonText: 'Hủy'
+    });
     if (!code) return;
     
     socketRef.current.emit('candidate_checkin', { interviewCode: code.trim().toUpperCase(), department: viewDepartment });
@@ -150,6 +163,13 @@ export default function ReceptionistView() {
           </div>
 
           <div className="flex items-center gap-3">
+              <button 
+                onClick={handleLogout}
+                className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 hover:border-red-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+              >
+                <LogOut size={16} /> Đăng xuất
+              </button>
+
             <button 
               onClick={() => window.open(`/tv?department=${viewDepartment}`, '_blank')}
               className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"

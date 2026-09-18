@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { io } from 'socket.io-client';
-import { CheckCircle2, Clock, MapPin, Handshake } from 'lucide-react';
+import { LogOut, CheckCircle2, Clock, MapPin, Handshake } from 'lucide-react';
 import MacBackground from '../components/MacBackground';
 import MacWindow from '../components/MacWindow';
 
@@ -132,7 +132,14 @@ export default function CandidateView() {
     <div className={`min-h-screen flex items-center justify-center font-sans transition-all duration-700 ${flash ? 'bg-red-500' : ''}`}>
       {!flash && <MacBackground />}
       
-      <div className={`relative z-10 w-full max-w-md p-4 transition-all duration-500 ${flash ? 'scale-105' : ''}`}>
+      
+        <div className={`relative z-10 w-full max-w-md p-4 transition-all duration-500 ${flash ? 'scale-105' : ''}`}>
+          <button 
+            onClick={() => { localStorage.removeItem('user'); window.location.href = '/'; }} 
+            className="absolute -top-8 right-4 bg-white/30 hover:bg-white text-slate-600 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm backdrop-blur-md transition-all flex items-center gap-2"
+          >
+            <LogOut size={14} /> Đăng xuất
+          </button>
         <MacWindow title="Hồ Sơ Ứng Viên" contentClassName="p-10 text-center">
           <div className="mb-8">
             <div className="inline-block bg-blue-100/80 backdrop-blur-md text-blue-800 font-black px-5 py-2 rounded-full border border-blue-200 shadow-sm text-sm mb-4">

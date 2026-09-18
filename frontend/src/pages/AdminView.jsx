@@ -1,5 +1,6 @@
+import Swal from 'sweetalert2';
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { LogOut, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, AlertTriangle, Download, Clock, ShieldCheck, FileText, RefreshCw, Hash, Trash2, List } from 'lucide-react';
 import io from 'socket.io-client';
 import Board from './Board';
@@ -9,6 +10,11 @@ import MacWindow from '../components/MacWindow';
 
 export default function AdminView() {
   const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
   const performSwitchToRole = async (roleName, path) => {
     let tableNum = null;
     let roomNum = null;
@@ -267,8 +273,16 @@ export default function AdminView() {
   const bottleneckCandidates = boardData.waiting.filter(c => getWaitMinutes(c.checkInTime) > 30);
 
   const handleCleanData = async () => {
-    const password = window.prompt("CẢNH BÁO: Hành động này sẽ làm sạch toàn bộ dữ liệu phỏng vấn. Vui lòng nhập mật khẩu:");
-    if (password === null) return;
+    const { value: password } = await Swal.fire({
+      title: 'LÀM SẠCH DỮ LIỆU',
+      input: 'password',
+      inputLabel: 'Nhập mật khẩu để tiếp tục:',
+      inputPlaceholder: 'Mật khẩu...',
+      showCancelButton: true,
+      confirmButtonText: 'Xác nhận',
+      cancelButtonText: 'Hủy'
+    });
+    if (!password) return;
     
     const res = await fetch('/api/admin/clean-data', {
       method: 'POST',
@@ -436,6 +450,13 @@ export default function AdminView() {
           </div>
 
           <div className="flex items-center gap-3">
+              <button 
+                onClick={handleLogout}
+                className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 hover:border-red-500 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2"
+              >
+                <LogOut size={16} /> Đăng xuất
+              </button>
+
             {['Trần Đức Hoàng Anh', 'Kiều Minh Anh', 'Phạm Việt Bách'].includes(user.fullName) && (
               <button 
                 onClick={handleCleanData}
