@@ -389,18 +389,24 @@ app.get('/api/candidates', async (req, res) => {
 
 app.get('/api/evaluations', async (req, res) => {
   try {
-    const evals = await Evaluation.find().sort({ createdAt: -1 }).lean();
-    
-    // Fetch all candidates and users for quick lookup
-    const candidates = await Candidate.find().lean();
-    const users = await User.find().lean();
-    
+    const { department } = req.query;
+    const evalFilter = department ? { department } : {};
+    const candidateFilter = department ? { department } : {};
+
+    // Run all 3 queries in parallel instead of sequentially
+    const [evals, candidates, users] = await Promise.all([
+      Evaluation.find(evalFilter).sort({ createdAt: -1 }).lean(),
+      // Only fetch the fields needed for name lookup, skip heavy applicationData
+      Candidate.find(candidateFilter).select('interviewCode applicationData.Họ và tên applicationData.Họ tên applicationData.fullName').lean(),
+      User.find().select('username fullName').lean()
+    ]);
+
     const candidateMap = {};
     candidates.forEach(c => {
       const d = c.applicationData || {};
       candidateMap[c.interviewCode] = d['Họ và tên'] || d['Họ tên'] || d['fullName'] || c.interviewCode;
     });
-    
+
     const userMap = {};
     users.forEach(u => userMap[u.username] = u.fullName || u.username);
 

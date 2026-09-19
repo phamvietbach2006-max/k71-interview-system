@@ -143,7 +143,8 @@ export default function AdminView() {
   };
 
   const fetchEvaluations = async () => {
-    const res = await fetch('/api/evaluations');
+    const deptQuery = viewDepartment ? `?department=${viewDepartment}` : '';
+    const res = await fetch(`/api/evaluations${deptQuery}`);
     const data = await res.json();
     setEvaluations(data);
   };
