@@ -652,7 +652,27 @@ app.delete('/api/users/:username', async (req, res) => {
 const buildPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(buildPath));
 
-  
+
+app.post('/api/candidates/reset-checkin', async (req, res) => {
+  const { interviewCode, department } = req.body;
+  try {
+    const candidate = await Candidate.findOne({ interviewCode, department });
+    if (!candidate) return res.status(404).json({ success: false, message: 'Không tìm thấy ứng viên' });
+    
+    // Reset check-in data only - keep applicationData intact so they can re-login and check-in
+    candidate.status = 'active';
+    candidate.checkInTime = null;
+    candidate.assignedRoom = null;
+    candidate.assignedTable = null;
+    await candidate.save();
+    
+    io.emit('board_update');
+    res.json({ success: true, message: 'Đã xóa check-in thành công' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.post('/api/candidates/checkin', async (req, res) => {
   let { interviewCode, department } = req.body;
   if (interviewCode) interviewCode = interviewCode.trim().toUpperCase();

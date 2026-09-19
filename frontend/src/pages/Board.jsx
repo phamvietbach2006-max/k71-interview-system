@@ -4,8 +4,16 @@ import { Users, PlayCircle, UserCheck, CheckCircle2, Clock, Loader2, Sparkles } 
 import MacBackground from '../components/MacBackground';
 import MacWindow from '../components/MacWindow';
 
-export default function Board({ hideHeader, department }) {
+export default function Board({ hideHeader, department, isAdmin, onRemoveCandidate }) {
   const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
+  const [contextMenu, setContextMenu] = useState(null); // { x, y, candidate }
+
+  // Close context menu on any click
+  React.useEffect(() => {
+    const close = () => setContextMenu(null);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, []);
 
   useEffect(() => {
     fetchBoard();
@@ -36,6 +44,7 @@ export default function Board({ hideHeader, department }) {
   };
 
   return (
+    <>
     <div className="w-full h-full flex flex-col font-sans">
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 h-full min-h-[500px]">
           
@@ -52,7 +61,10 @@ export default function Board({ hideHeader, department }) {
               {boardData.waiting.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-400 italic font-medium">Trống</div>
               ) : boardData.waiting.map(c => (
-                <div key={c.interviewCode} className={`relative p-5 rounded-2xl transition-all duration-500 ${c.status === 'moving' ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 shadow-lg shadow-orange-500/20 scale-[1.02] z-10' : 'bg-white/80 border border-white shadow-sm hover:shadow-md'}`}>
+                <div key={c.interviewCode}
+                  className={`relative p-5 rounded-2xl transition-all duration-500 ${c.status === 'moving' ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 shadow-lg shadow-orange-500/20 scale-[1.02] z-10' : 'bg-white/80 border border-white shadow-sm hover:shadow-md'}${isAdmin ? ' cursor-context-menu' : ''}`}
+                  onContextMenu={isAdmin ? (e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, candidate: c }); } : undefined}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <span className={`font-black text-xl tracking-tight ${c.status === 'moving' ? 'text-orange-900' : 'text-slate-700'}`}>{c.applicationData?.['Họ và tên'] || c.interviewCode}</span>
                     {c.status === 'moving' && <span className="flex h-4 w-4 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span><span className="relative inline-flex rounded-full h-4 w-4 bg-orange-600"></span></span>}
@@ -118,11 +130,35 @@ export default function Board({ hideHeader, department }) {
                     <CheckCircle2 size={20} />
                   </span>
                 </div>
-              ))}
+              ))}\
             </div>
           </div>
 
         </div>
-    </div>
+      </div>
+
+      {/* Admin Context Menu */}
+      {isAdmin && contextMenu && (
+        <div
+          className="fixed z-[9999] bg-white rounded-xl shadow-2xl border border-slate-200 py-1 min-w-[180px]"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+            {contextMenu.candidate.applicationData?.['Họ và tên'] || contextMenu.candidate.interviewCode}
+          </div>
+          <button
+            onClick={() => {
+              if (onRemoveCandidate) onRemoveCandidate(contextMenu.candidate);
+              setContextMenu(null);
+            }}
+            className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+          >
+            <span>🗑️</span> Xóa khỏi hàng chờ
+          </button>
+        </div>
+      )}
+    </>
   );
 }
+

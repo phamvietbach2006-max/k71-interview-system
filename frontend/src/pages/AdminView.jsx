@@ -160,6 +160,41 @@ export default function AdminView() {
     setCandidates(data);
   };
 
+
+  const handleRemoveFromQueue = async (candidate) => {
+    const { value: password } = await Swal.fire({
+      title: 'Xác nhận xóa khỏi hàng chờ',
+      text: `Xóa check-in của: ${candidate.applicationData?.['Họ và tên'] || candidate.interviewCode}?`,
+      input: 'password',
+      inputLabel: 'Nhập mật khẩu để xác nhận:',
+      inputPlaceholder: 'Mật khẩu...',
+      showCancelButton: true,
+      confirmButtonText: 'Xóa',
+      confirmButtonColor: '#d33',
+      cancelButtonText: 'Hủy',
+    });
+    if (!password) return;
+    if (password !== 'Abc@123') {
+      return Swal.fire('Sai mật khẩu!', 'Không thể thực hiện thao tác này.', 'error');
+    }
+    try {
+      const res = await fetch('/api/candidates/reset-checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interviewCode: candidate.interviewCode, department: candidate.department })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Đã xóa check-in. Ứng viên có thể check-in lại từ đầu.');
+        fetchBoard();
+      } else {
+        toast.error(data.message || 'Có lỗi xảy ra');
+      }
+    } catch (err) {
+      toast.error('Lỗi kết nối');
+    }
+  };
+
   const handleAddCandidate = async (e) => {
     e.preventDefault();
     if (!newCandidate.interviewCode || !newCandidate.fullName) return toast.error('Vui lòng điền đủ Mã Ứng Viên và Họ Tên');
@@ -588,7 +623,7 @@ export default function AdminView() {
               <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-[2rem] shadow-sm border border-white/50 overflow-hidden relative min-h-[70vh]">
                 <div className="absolute inset-0 overflow-y-auto">
                   <div className="transform scale-[0.9] origin-top">
-                    <Board hideHeader={true} department={viewDepartment} />
+                    <Board hideHeader={true} department={viewDepartment} isAdmin={true} onRemoveCandidate={handleRemoveFromQueue} />
                   </div>
                 </div>
               </div>
