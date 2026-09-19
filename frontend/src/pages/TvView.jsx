@@ -26,7 +26,8 @@ export default function TvView() {
 
   const fetchBoard = async () => {
     try {
-      const res = await fetch(`/api/tv-board?department=${viewDepartment}`);
+      // Fetch all departments together so both columns show correctly
+      const res = await fetch(`/api/tv-board`);
       const data = await res.json();
       setBoardData(data);
     } catch (err) {
@@ -34,17 +35,22 @@ export default function TvView() {
     }
   };
 
+  const getName = (c) => {
+    const d = c.applicationData || {};
+    return d['Họ và tên'] || d['Họ tên'] || d['Ho va ten'] || d['fullName'] || 'Ứng viên';
+  };
+
   const tcktMoving = boardData.moving.filter(c => c.department === "TCKT");
-  const tcktWaiting = boardData.waiting.filter(c => c.department === "TCKT").slice(0, 5);
+  const tcktWaiting = boardData.waiting.filter(c => c.department === "TCKT").slice(0, 8);
   const bcsMoving = boardData.moving.filter(c => c.department === "BCS");
-  const bcsWaiting = boardData.waiting.filter(c => c.department === "BCS").slice(0, 5);
+  const bcsWaiting = boardData.waiting.filter(c => c.department === "BCS").slice(0, 8);
 
   const renderCandidateRow = (c, colorTheme) => (
     <div key={c.interviewCode} className={`w-full bg-white/10 border border-white/20 p-3 rounded-2xl flex flex-col xl:flex-row items-center justify-between gap-3 transform hover:scale-[1.02] transition-transform animate-fade-in-up shrink-0`}>
       <div className="flex-1 text-left pl-2">
         <div className={`${colorTheme.textMuted} font-bold text-sm uppercase tracking-widest mb-0.5`}>MSSV: {c.interviewCode}</div>
         <div className="text-2xl xl:text-3xl font-black text-white tracking-tight drop-shadow-md leading-tight">
-          {c.applicationData?.["Họ và tên"] || "Ứng viên"}
+          {getName(c)}
         </div>
       </div>
       
@@ -98,7 +104,7 @@ export default function TvView() {
                     <div className="flex items-center gap-4">
                       <span className="text-2xl font-black text-blue-200 w-10 text-center drop-shadow-md">#{index + 1}</span>
                       <div className="flex flex-col">
-                        <span className="text-xl font-black tracking-tight drop-shadow-sm leading-tight">{c.applicationData?.["Họ và tên"] || "Ứng viên"}</span>
+                        <span className="text-xl font-black tracking-tight drop-shadow-sm leading-tight">{getName(c)}</span>
                         <span className="text-blue-300 font-bold text-xs uppercase tracking-widest">MSSV: {c.interviewCode}</span>
                       </div>
                     </div>
@@ -135,7 +141,7 @@ export default function TvView() {
                     <div className="flex items-center gap-4">
                       <span className="text-2xl font-black text-emerald-200 w-10 text-center drop-shadow-md">#{index + 1}</span>
                       <div className="flex flex-col">
-                        <span className="text-xl font-black tracking-tight drop-shadow-sm leading-tight">{c.applicationData?.["Họ và tên"] || "Ứng viên"}</span>
+                        <span className="text-xl font-black tracking-tight drop-shadow-sm leading-tight">{getName(c)}</span>
                         <span className="text-emerald-300 font-bold text-xs uppercase tracking-widest">MSSV: {c.interviewCode}</span>
                       </div>
                     </div>

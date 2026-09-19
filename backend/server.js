@@ -396,7 +396,10 @@ app.get('/api/evaluations', async (req, res) => {
     const users = await User.find().lean();
     
     const candidateMap = {};
-    candidates.forEach(c => candidateMap[c.interviewCode] = c.applicationData?.['Họ và tên'] || c.interviewCode);
+    candidates.forEach(c => {
+      const d = c.applicationData || {};
+      candidateMap[c.interviewCode] = d['Họ và tên'] || d['Họ tên'] || d['fullName'] || c.interviewCode;
+    });
     
     const userMap = {};
     users.forEach(u => userMap[u.username] = u.fullName || u.username);
