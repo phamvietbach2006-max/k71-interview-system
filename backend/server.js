@@ -545,6 +545,20 @@ app.post('/api/interviewer/call', async (req, res) => {
     if (!interviewer.tableNumber || !interviewer.roomNumber) return res.status(400).json({ success: false, message: 'Người phỏng vấn chưa có số phòng/bàn. Vui lòng đăng nhập lại và nhập số phòng, số bàn.' });
     if (interviewer.status === 'break') return res.status(400).json({ success: false, message: 'Người phỏng vấn đang tạm nghỉ. Vui lòng bật lại trạng thái sẵn sàng.' });
 
+    // Auto-repair: if interviewer is stuck in 'interviewing' but no one is at their table, reset them
+    if (interviewer.status === 'interviewing') {
+      const reallyBusy = await Candidate.findOne({
+        department: interviewer.department,
+        assignedRoom: interviewer.roomNumber,
+        assignedTable: interviewer.tableNumber,
+        status: { $in: ['moving', 'interviewing'] }
+      });
+      if (!reallyBusy) {
+        await User.updateOne({ _id: interviewer._id }, { status: 'active' });
+        interviewer.status = 'active';
+      }
+    }
+
     const busyCandidate = await Candidate.findOne({
         department: interviewer.department,
         assignedRoom: interviewer.roomNumber,
