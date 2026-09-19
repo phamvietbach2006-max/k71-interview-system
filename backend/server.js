@@ -539,8 +539,11 @@ app.post('/api/interviewer/cancel', async (req, res) => {
 app.post('/api/interviewer/call', async (req, res) => {
   const { username, interviewCode } = req.body;
   try {
-    const interviewer = await User.findOne({ username, role: 'interviewer', status: 'active' });
-    if (!interviewer) return res.status(400).json({ success: false, message: 'Interviewer not ready' });
+    // Find by username only - be flexible on role/status
+    const interviewer = await User.findOne({ username });
+    if (!interviewer) return res.status(400).json({ success: false, message: 'Không tìm thấy tài khoản người phỏng vấn' });
+    if (!interviewer.tableNumber || !interviewer.roomNumber) return res.status(400).json({ success: false, message: 'Người phỏng vấn chưa có số phòng/bàn. Vui lòng đăng nhập lại và nhập số phòng, số bàn.' });
+    if (interviewer.status === 'break') return res.status(400).json({ success: false, message: 'Người phỏng vấn đang tạm nghỉ. Vui lòng bật lại trạng thái sẵn sàng.' });
 
     const busyCandidate = await Candidate.findOne({
         department: interviewer.department,
