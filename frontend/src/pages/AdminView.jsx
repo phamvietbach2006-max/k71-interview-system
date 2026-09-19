@@ -61,7 +61,7 @@ export default function AdminView() {
   };
 
   const socketRef = useRef(null);
-  const [boardData, setBoardData] = useState({ waiting: [], interviewing: [], completed: [] });
+  const [boardData, setBoardData] = useState({ waiting: [], moving: [], interviewing: [], completed: [] });
   const [evaluations, setEvaluations] = useState([]);
   const [candidates, setCandidates] = useState([]);
   const [usersList, setUsersList] = useState([]);

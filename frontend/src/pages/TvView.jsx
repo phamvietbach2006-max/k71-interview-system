@@ -29,7 +29,12 @@ export default function TvView() {
       // Fetch all departments together so both columns show correctly
       const res = await fetch(`/api/tv-board`);
       const data = await res.json();
-      setBoardData(data);
+      setBoardData({
+        waiting: data.waiting || [],
+        moving: data.moving || [],
+        interviewing: data.interviewing || [],
+        completed: data.completed || []
+      });
     } catch (err) {
       console.error(err);
     }
